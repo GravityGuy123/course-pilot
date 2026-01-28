@@ -15,7 +15,7 @@ export default function ContactPage() {
             Contact <span className="text-yellow-300">Us</span>
           </h1>
           <p className="mt-4 text-lg text-white/90 max-w-2xl mx-auto">
-            Got questions or suggestions? We’d love to hear from you.
+            {`Got questions or suggestions? We'd love to hear from you.`}
           </p>
         </div>
       </section>
@@ -27,14 +27,14 @@ export default function ContactPage() {
           <motion.div whileHover={{ x: 5 }} className="flex items-center gap-4">
             <FaEnvelope className="text-violet-600 dark:text-violet-300 text-2xl" />
             <Link
-              href="mailto:info@ever-learn.com"
+              href="mailto:info@course-pilot.com"
               className="inline-block text-sm md:text-base font-medium text-violet-600 dark:text-indigo-300
              hover:underline underline-offset-4
              hover:decoration-violet-600 dark:hover:decoration-indigo-500
              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:focus-visible:ring-indigo-400
              rounded transition-colors duration-300"
             >
-              info@ever-learn.com
+              info@course-pilot.com
             </Link>
           </motion.div>
 
@@ -54,10 +54,14 @@ export default function ContactPage() {
 
           <motion.div whileHover={{ x: 5 }} className="flex items-center gap-4">
             <FaMapMarkerAlt className="text-violet-600 dark:text-violet-300 text-2xl" />
-            <span className="text-sm inline-block md:text-base font-medium text-violet-600 dark:text-indigo-300
+            <span
+              className="text-sm inline-block md:text-base font-medium text-violet-600 dark:text-indigo-300
              hover:decoration-violet-600 dark:hover:decoration-indigo-500
              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 dark:focus-visible:ring-indigo-400
-             rounded transition-colors duration-300">Anambra, Nigeria</span>
+             rounded transition-colors duration-300"
+            >
+              Anambra, Nigeria
+            </span>
           </motion.div>
         </div>
 

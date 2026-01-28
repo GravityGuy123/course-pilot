@@ -178,7 +178,7 @@ export default function GeneralDashboard() {
       {/* Welcome Section */}
       <div className="bg-linear-to-r from-violet-50 via-indigo-50 to-indigo-100 dark:from-gray-900 dark:via-gray-950 dark:to-gray-900 rounded-2xl p-6 md:p-8 text-gray-900 dark:text-gray-100 shadow-sm">
         <h1 className="text-2xl md:text-3xl font-bold font-heading mb-2">
-          Welcome to Ever-Learn!
+          Welcome to Course-Pilot!
         </h1>
         <p className="text-gray-700 dark:text-gray-300 max-w-2xl leading-relaxed">
           Discover thousands of courses from expert instructors. Start your

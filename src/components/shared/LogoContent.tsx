@@ -28,7 +28,7 @@ export default function LogoContent() {
         priority
       />
       <span className="text-2xl uppercase font-bold text-violet-400 dark:text-indigo-200">
-        Ever-Learn
+        Course-Pilot
       </span>
     </section>
   );

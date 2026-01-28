@@ -1,4 +1,3 @@
-// /lib/toast.ts
 import { toast } from "sonner";
 import { ToastOptions } from "./types";
 
