@@ -11,11 +11,11 @@ export default function AboutPage() {
       <section className="bg-gradient-to-r from-violet-400 to-purple-400 dark:from-violet-800 dark:to-purple-900 py-20">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h1 className="text-4xl md:text-5xl font-extrabold text-white">
-            About <span className="text-yellow-300">EverLearn</span>
+            About <span className="text-yellow-300">CoursePilot</span>
           </h1>
           <p className="mt-4 text-lg text-white/90 max-w-2xl mx-auto">
-            Empowering minds, shaping futures. Our mission is to make world-class learning
-            accessible to everyone, everywhere.
+            Empowering minds, shaping futures. Our mission is to make
+            world-class learning accessible to everyone, everywhere.
           </p>
         </div>
       </section>
@@ -54,7 +54,7 @@ export default function AboutPage() {
           <h3 className="mt-4 font-bold text-xl">Our Story</h3>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             Founded with a belief that education should be limitless,
-            EverLearn bridges the gap between passion and profession.
+            CoursePilot bridges the gap between passion and profession.
           </p>
         </motion.div>
       </section>

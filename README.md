@@ -1,8 +1,8 @@
-# EverLearn — Frontend (everlearn/) — Developer README
+# CoursePilot — Frontend (course-pilot/) — Developer README
 
 Last updated: 2025-12-10
 
-This README documents the Next.js frontend application located at `everlearn/`. It explains architecture, auth integration, how pages and components map to backend APIs, local developer setup, and maintenance notes. It's written for developers who will run, develop, or extend the frontend.
+This README documents the Next.js frontend application located at `course-pilot/`. It explains architecture, auth integration, how pages and components map to backend APIs, local developer setup, and maintenance notes. It's written for developers who will run, develop, or extend the frontend.
 
 Table of contents
 - Overview
@@ -67,7 +67,7 @@ Dashboard routing and role behavior
 
 API surface used by the frontend (summary)
 ----------------------------------------
-The frontend calls the following notable endpoints (backend paths under `everlearn_back/core/urls.py`):
+The frontend calls the following notable endpoints (backend paths under `course-pilot_back/core/urls.py`):
 
 - Auth
     - GET `/csrf/` — obtain CSRF token JSON
@@ -93,10 +93,10 @@ Prerequisites:
 - Node.js 18+, npm
 - Python 3.11+ (for backend)
 
-Frontend dev server (in `everlearn/`):
+Frontend dev server (in `course-pilot/`):
 
 ```bash
-cd everlearn
+cd course-pilot
 npm install
 npm run dev
 ```
@@ -104,7 +104,7 @@ npm run dev
 The frontend expects the backend to be available at `NEXT_PUBLIC_API_URL` (defaults to `http://localhost:8000/api`). If your backend serves at a different host, set the environment variable in `.env.local`.
 
 Backend (for local end-to-end development):
-(See `everlearn_back/README.md` for details.)
+(See `course-pilot_back/README.md` for details.)
 
 Linting, tests, and formatting
 -----------------------------

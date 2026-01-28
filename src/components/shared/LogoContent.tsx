@@ -21,7 +21,7 @@ export default function LogoContent() {
     <section className="flex items-center gap-2 mt-4 mb-6 px-3">
       <Image
         src={logoSrc}
-        alt="EverLearn Logo"
+        alt="CoursePilot Logo"
         width={36}
         height={36}
         className="rounded-md"

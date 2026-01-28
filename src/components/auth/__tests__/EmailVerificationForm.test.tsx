@@ -1,17 +1,17 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import EmailVerificationForm from '../EmailVerificationForm';
 import { axiosInstance } from '@/lib/axios.config';
 import type { AxiosResponse, InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
 
-jest.mock('@/lib/axios.config', () => ({
+vi.mock('@/lib/axios.config', () => ({
   axiosInstance: {
-    post: jest.fn(),
+    post: vi.fn(),
   },
 }));
 
-// Properly typed mock
-const mockedAxiosPost = axiosInstance.post as jest.MockedFunction<typeof axiosInstance.post>;
+const mockedAxiosPost = axiosInstance.post as unknown as ReturnType<typeof vi.fn>;
 
 describe('EmailVerificationForm', () => {
   const email = 'test@example.com';
@@ -21,7 +21,6 @@ describe('EmailVerificationForm', () => {
   });
 
   it('sends a code when Send code is clicked', async () => {
-    // Properly typed AxiosResponse
     const mockResponse: AxiosResponse<{ status: number }> = {
       data: { status: 201 },
       status: 201,
@@ -33,7 +32,6 @@ describe('EmailVerificationForm', () => {
     mockedAxiosPost.mockResolvedValue(mockResponse);
 
     render(<EmailVerificationForm email={email} />);
-
     fireEvent.click(screen.getByText(/Send code/i));
 
     await waitFor(() =>
@@ -62,12 +60,16 @@ describe('EmailVerificationForm', () => {
     mockedAxiosPost.mockResolvedValueOnce(verifyCodeResponse);
 
     render(<EmailVerificationForm email={email} />);
-
-    fireEvent.change(screen.getByPlaceholderText(/Enter code/i), { target: { value: 'ABC123' } });
+    fireEvent.change(screen.getByPlaceholderText(/Enter code/i), {
+      target: { value: 'ABC123' },
+    });
     fireEvent.click(screen.getByText(/Verify/i));
 
     await waitFor(() =>
-      expect(mockedAxiosPost).toHaveBeenCalledWith('/email/verify', { email, code: 'ABC123' })
+      expect(mockedAxiosPost).toHaveBeenCalledWith('/email/verify', {
+        email,
+        code: 'ABC123',
+      })
     );
   });
 });
