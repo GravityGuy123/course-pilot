@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/axios.config";
 import axios from "axios";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-export default function DeleteLessonPage() {
+function DeleteLessonPage() {
   const { lessonid } = useParams() as { lessonid: string };
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -40,5 +41,14 @@ export default function DeleteLessonPage() {
       </button>
       <button onClick={() => router.back()}>Cancel</button>
     </div>
+  );
+}
+
+
+export default function DeleteLessonPageContent() {
+  return (
+    <ProtectedRoute>
+      <DeleteLessonPage />
+    </ProtectedRoute>
   );
 }

@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/axios.config';
 import { Enrollment } from '@/lib/types';
+import { ProtectedRoute } from '@/components/routing/RouteGuard';
 
-export default function MyEnrollmentsPage() {
-const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+function EnrollmentsPage() {
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -46,5 +47,15 @@ const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
         ))}
       </ul>
     </div>
+  );
+}
+
+
+
+export default function EnrollmentsPageContent() {
+  return (
+    <ProtectedRoute>
+      <EnrollmentsPage />
+    </ProtectedRoute>
   );
 }

@@ -8,6 +8,7 @@ import LessonsList from "@/components/lessons/LessonsList";
 import LessonsSearchFilter from "@/components/lessons/LessonsSearchFilter";
 import ProgressOverview from "@/components/others/ProgressOverview";
 import { LessonsPageLesson } from "@/lib/types";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 
 // Lessons data
@@ -53,7 +54,7 @@ const lessons: LessonsPageLesson[] = [
   },
 ];
 
-export default function LessonsPage() {
+function LessonsPage() {
   return (
     <div className="flex-1 p-8 overflow-y-auto">
       <LessonsHeader />
@@ -63,5 +64,14 @@ export default function LessonsPage() {
       <CurrentLessonHighlight />
       <LessonsList />
     </div>
+  );
+}
+
+
+export default function LessonsPageContent() {
+  return (
+    <ProtectedRoute>
+      <LessonsPage />
+    </ProtectedRoute>
   );
 }

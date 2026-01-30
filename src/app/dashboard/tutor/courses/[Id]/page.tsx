@@ -6,8 +6,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { CourseComponent } from "@/components/courses/CourseComponent";
 import { api } from "@/lib/axios.config";
 import { CoursePageDetails } from "@/lib/types";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-export default function TutorCourseDetailsPage() {
+function TutorCourseDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [course, setCourse] = useState<CoursePageDetails | null>(null);
@@ -75,4 +76,13 @@ export default function TutorCourseDetailsPage() {
   }
 
   return <CourseComponent course={course} />;
+}
+
+
+export default function TutorCourseDetailsPageContent() {
+  return (
+    <ProtectedRoute>
+      <TutorCourseDetailsPage />
+    </ProtectedRoute>
+  );
 }

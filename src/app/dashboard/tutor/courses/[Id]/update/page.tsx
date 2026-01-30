@@ -15,6 +15,7 @@ import { createCourseSchema } from "@/lib/schema";
 import z from "zod";
 import { SuccessToast } from "@/lib/toast";
 import { useTheme } from "next-themes";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 /* ---------------- CONSTANTS ---------------- */
 
@@ -32,7 +33,7 @@ type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
 
 /* ---------------- PAGE ---------------- */
 
-export default function UpdateCoursePage() {
+function UpdateCoursePage() {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -417,5 +418,14 @@ export default function UpdateCoursePage() {
         </Button>
       </form>
     </div>
+  );
+}
+
+
+export default function UpdateCoursePageContent() {
+  return (
+    <ProtectedRoute>
+      <UpdateCoursePage />
+    </ProtectedRoute>
   );
 }

@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 interface ModuleForm {
   title: string;
@@ -11,7 +12,7 @@ interface ModuleForm {
   description: string;
 }
 
-export default function CreateModulePage() {
+function CreateModulePage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
 
@@ -141,5 +142,14 @@ export default function CreateModulePage() {
         </div>
       </form>
     </div>
+  );
+}
+
+
+export default function CreateModulePageContent() {
+  return (
+    <ProtectedRoute>
+      <CreateModulePage />
+    </ProtectedRoute>
   );
 }

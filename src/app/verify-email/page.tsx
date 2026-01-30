@@ -1,4 +1,6 @@
-export default function VerifyEmailPage() {
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
+
+function VerifyEmailPage() {
 
     return (
         <section>
@@ -6,4 +8,13 @@ export default function VerifyEmailPage() {
             <p>Please check your email to verify your account.</p>
         </section>
     )
+}
+
+
+export default function VerifyEmailPageContent() {
+  return (
+    <ProtectedRoute>
+      <VerifyEmailPage />
+    </ProtectedRoute>
+  );
 }

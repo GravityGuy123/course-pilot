@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/axios.config";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 interface Lesson {
   id: string;
@@ -12,7 +13,7 @@ interface Lesson {
   content: string;
 }
 
-export default function UpdateLessonPage() {
+function UpdateLessonPage() {
   const { lessonid } = useParams() as { lessonid: string };
   const router = useRouter();
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -96,5 +97,14 @@ export default function UpdateLessonPage() {
         {submitting ? "Updating..." : "Update Lesson"}
       </button>
     </form>
+  );
+}
+
+
+export default function UpdateLessonPageContent() {
+  return (
+    <ProtectedRoute>
+      <UpdateLessonPage />
+    </ProtectedRoute>
   );
 }

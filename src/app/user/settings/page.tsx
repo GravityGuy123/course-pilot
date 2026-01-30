@@ -12,8 +12,9 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { ErrorToast, SuccessToast } from "@/lib/toast";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-export default function UserSettingsPage() {
+function UserSettingsPage() {
   const { user, checkAuth, loading: authLoading } = useAuth();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const router = useRouter();
@@ -213,5 +214,14 @@ export default function UserSettingsPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+
+export default function UserSettingsPageContent() {
+  return (
+    <ProtectedRoute>
+      <UserSettingsPage />
+    </ProtectedRoute>
   );
 }

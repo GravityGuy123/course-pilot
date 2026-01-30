@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, BookOpen } from "lucide-react";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 interface Module {
   id: string;
@@ -13,7 +14,7 @@ interface Module {
   description: string;
 }
 
-export default function ModuleListPage() {
+function ModuleListPage() {
   const { id } = useParams() as { id: string };
   const [modules, setModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,5 +156,15 @@ export default function ModuleListPage() {
         </div>
       )}
     </div>
+  );
+}
+
+
+
+export default function ModuleListPageContent() {
+  return (
+    <ProtectedRoute>
+      <ModuleListPage />
+    </ProtectedRoute>
   );
 }

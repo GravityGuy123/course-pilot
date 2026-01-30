@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 interface LessonFormData {
   title: string;
@@ -14,7 +15,7 @@ interface ErrorResponse {
   detail?: string;
 }
 
-export default function CreateLessonPage({
+function CreateLessonPage({
   params,
 }: {
   params: { id: string; moduleId: string };
@@ -130,3 +131,14 @@ export default function CreateLessonPage({
     </div>
   );
 }
+
+
+export default function CreateLessonPageContent({ params, }: {
+  params: { id: string; moduleId: string };}) {
+
+  return (
+    <ProtectedRoute>
+      <CreateLessonPage params={params} />
+    </ProtectedRoute>
+  );
+};

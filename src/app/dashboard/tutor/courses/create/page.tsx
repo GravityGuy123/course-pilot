@@ -10,10 +10,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createCourseSchema, CreateCourseInput } from "@/lib/schema";
 import { SuccessToast } from "@/lib/toast";
 import { useTheme } from "next-themes";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
 
-export default function CreateCoursePage() {
+function CreateCoursePage() {
   const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === "dark";
@@ -316,5 +317,14 @@ export default function CreateCoursePage() {
         </Button>
       </form>
     </div>
+  );
+}
+
+
+export default function CreateCoursePageContent() {
+  return (
+    <ProtectedRoute>
+      <CreateCoursePage />
+    </ProtectedRoute>
   );
 }

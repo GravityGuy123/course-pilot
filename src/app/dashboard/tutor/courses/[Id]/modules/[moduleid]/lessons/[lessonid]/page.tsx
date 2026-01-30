@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/axios.config";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 interface Lesson {
   id: string;
@@ -12,7 +13,7 @@ interface Lesson {
   content: string;
 }
 
-export default function LessonViewPage() {
+function LessonViewPage() {
   const { lessonid } = useParams() as { lessonid: string };
   const [lesson, setLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,5 +45,14 @@ export default function LessonViewPage() {
       <p>{lesson.description}</p>
       <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
     </div>
+  );
+}
+
+
+export default function LessonViewPageContent() {
+  return (
+    <ProtectedRoute>
+      <LessonViewPage />
+    </ProtectedRoute>
   );
 }

@@ -8,12 +8,13 @@ import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AllCoursesPageProps } from "@/lib/types";
 import { Clock, Users, BookOpen, RefreshCcw, Trash2 } from "lucide-react";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 type UiState = "loading" | "ready" | "empty" | "error";
 
-export default function TutorCoursesPage() {
+function TutorCoursesPage() {
   const router = useRouter();
 
   const [courses, setCourses] = useState<AllCoursesPageProps[]>([]);
@@ -25,9 +26,6 @@ export default function TutorCoursesPage() {
       setUiState("loading");
       setErrorMsg("");
 
-      // SOURCE/CAUSE NOTE (this code block):
-      // This endpoint must match your backend route for tutor courses.
-      // If your backend is mounted at /api/courses/tutor/courses/, then the frontend should call "/courses/tutor/courses/".
       const res = await api.get<AllCoursesPageProps[]>("/tutor/courses");
 
       const list = Array.isArray(res.data) ? res.data : [];
@@ -313,5 +311,14 @@ export default function TutorCoursesPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+
+export default function TutorCoursesPageContent() {
+  return (
+    <ProtectedRoute>
+      <TutorCoursesPage />
+    </ProtectedRoute>
   );
 }

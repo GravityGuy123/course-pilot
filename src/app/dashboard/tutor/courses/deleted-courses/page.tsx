@@ -10,10 +10,11 @@ import { ErrorToast, SuccessToast } from "@/lib/toast";
 import { useTheme } from "next-themes";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
-export default function DeletedCoursesPage() {
+function DeletedCoursesPage() {
   const [deletedCourses, setDeletedCourses] = useState<AllCoursesPageProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,5 +182,14 @@ export default function DeletedCoursesPage() {
         })}
       </div>
     </div>
+  );
+}
+
+
+export default function DeletedCoursesPageContent() {
+  return (
+    <ProtectedRoute>
+      <DeletedCoursesPage />
+    </ProtectedRoute>
   );
 }

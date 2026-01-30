@@ -3,6 +3,7 @@
 import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/axios.config";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 interface Module {
   id: string;
@@ -11,7 +12,7 @@ interface Module {
   description: string;
 }
 
-export default function UpdateModulePage() {
+function UpdateModulePage() {
   const { id: courseId, moduleid: moduleId } = useParams() as {
     id: string;
     moduleid: string;
@@ -128,5 +129,14 @@ export default function UpdateModulePage() {
         </button>
       </form>
     </div>
+  );
+}
+
+
+export default function UpdateModulePageContent() {
+  return (
+    <ProtectedRoute>
+      <UpdateModulePage />
+    </ProtectedRoute>
   );
 }

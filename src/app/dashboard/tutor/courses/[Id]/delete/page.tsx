@@ -5,8 +5,9 @@ import { useState } from "react";
 import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-export default function DeleteCoursePage() {
+function DeleteCoursePage() {
   const router = useRouter();
 
   /* ✅ SAFE PARAM HANDLING */
@@ -92,5 +93,14 @@ export default function DeleteCoursePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function DeleteCoursePageContent() {
+  return (
+    <ProtectedRoute>
+      <DeleteCoursePage />
+    </ProtectedRoute>
   );
 }

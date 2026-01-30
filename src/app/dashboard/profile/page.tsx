@@ -4,8 +4,9 @@ import { useContext } from "react";
 import { AuthContext } from "@/context/auth-context";
 import EmailVerificationForm from "@/components/auth/EmailVerificationForm";
 import { useEffect, useState } from "react";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-export default function ProfilePage() {
+function ProfilePage() {
     const auth = useContext(AuthContext);
 
     if (!auth) {
@@ -87,5 +88,15 @@ function NotificationsPanel() {
         </li>
       ))}
     </ul>
+  );
+}
+
+
+
+export default function ProfilePageContent() {
+  return (
+    <ProtectedRoute>
+      <ProfilePage />
+    </ProtectedRoute>
   );
 }

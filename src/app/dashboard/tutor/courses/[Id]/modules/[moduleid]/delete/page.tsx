@@ -5,8 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-export default function DeleteModulePage() {
+function DeleteModulePage() {
   const { moduleid, id } = useParams() as { moduleid: string; id: string };
   const router = useRouter();
   const [deleting, setDeleting] = useState(false);
@@ -110,5 +111,14 @@ export default function DeleteModulePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+export default function DeleteModulePageContent() {
+  return (
+    <ProtectedRoute>
+      <DeleteModulePage />
+    </ProtectedRoute>
   );
 }

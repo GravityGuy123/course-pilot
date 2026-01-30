@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import DashboardRoleApplication from "@/components/dashboard/shared/DashboardRoleApplication";
+import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
 /* ---------- MANUAL DATA ---------- */
 const manualCourses: DashboardCourse[] = [
@@ -131,7 +132,7 @@ const manualCategories: Category[] = [
   },
 ];
 
-export default function GeneralDashboard() {
+function GeneralDashboardPage() {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const router = useRouter();
 
@@ -262,5 +263,14 @@ export default function GeneralDashboard() {
       <GeneralDashboardPopularCertifications />
       <DashboardRoleApplication />
     </div>
+  );
+}
+
+
+export default function GeneralDashboardPageContent() {
+  return (
+    <ProtectedRoute>
+      <GeneralDashboardPage />
+    </ProtectedRoute>
   );
 }
