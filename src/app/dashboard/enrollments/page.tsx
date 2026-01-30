@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { axiosInstance } from '@/lib/axios.config';
+import { api } from '@/lib/axios.config';
 import { Enrollment } from '@/lib/types';
 
 export default function MyEnrollmentsPage() {
@@ -12,7 +12,7 @@ const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
     let mounted = true;
     (async () => {
       try {
-        const res = await axiosInstance.get('/my-enrollments');
+        const res = await api.get('/my-enrollments');
         if (!mounted) return;
         setEnrollments(res.data || []);
       } catch (e) {

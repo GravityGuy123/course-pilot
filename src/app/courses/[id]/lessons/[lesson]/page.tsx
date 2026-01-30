@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { axiosInstance } from '@/lib/axios.config';
+import { api } from '@/lib/axios.config';
 import { Lesson } from '@/lib/types';
 
 export default function LessonPage() {
@@ -18,7 +18,7 @@ export default function LessonPage() {
     let mounted = true;
     (async () => {
       try {
-        const res = await axiosInstance.get(`/lessons/${lessonId}`);
+        const res = await api.get(`/lessons/${lessonId}`);
         if (!mounted) return;
         setLesson(res.data);
       } catch (e) {
@@ -53,7 +53,7 @@ export default function LessonPage() {
               try {
                 // Resolve enrollment by fetching user's enrollments and finding one for this course
                 type Enrollment = { id: string; course: { id: string; title?: string }; progress?: number };
-                const enrollRes = await axiosInstance.get('/my-enrollments');
+                const enrollRes = await api.get('/my-enrollments');
                 const enrollments: Enrollment[] = enrollRes.data || [];
                 const enrollment = enrollments.find((e) => e.course && String(e.course.id) === String(courseId));
                 if (!enrollment) {
@@ -61,7 +61,7 @@ export default function LessonPage() {
                   return;
                 }
                 const enrollmentId = enrollment.id;
-                const res = await axiosInstance.post(`/enrollments/${enrollmentId}/lessons/${lessonId}/complete`);
+                const res = await api.post(`/enrollments/${enrollmentId}/lessons/${lessonId}/complete`);
                 setMsg(res.data?.detail || 'Lesson marked complete');
               } catch (err) {
                 let message = 'Failed to mark complete';

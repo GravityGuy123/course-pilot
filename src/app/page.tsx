@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import HomeHero from "@/components/home/HomeHero";
-import { axiosInstance, baseUrl } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { FaBookOpen, FaCertificate, FaUsers } from "react-icons/fa";
 
 interface Course {
@@ -18,29 +18,38 @@ export default function HomePage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const MEDIA_BASE = baseUrl.replace("/api", "");
+  // Backend root (NOT /api)
+  const SERVER_URL =
+    (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(
+      /\/$/,
+      ""
+    );
 
   useEffect(() => {
+    let alive = true;
+
     const fetchFeaturedCourses = async () => {
       try {
-        const res = await axiosInstance.get<Course[]>("/courses/featured/");
-        setCourses(res.data);
+        const res = await api.get<Course[]>("/courses/featured/");
+        if (alive) setCourses(res.data);
       } catch (error) {
         console.error("Failed to fetch featured courses", error);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
 
     fetchFeaturedCourses();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   return (
     <div>
-      {/* Hero Section */}
       <HomeHero />
 
-      {/* Featured Courses */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <h2 className="text-2xl md:text-3xl font-bold text-center text-violet-600 dark:text-indigo-300 mb-12">
           Featured Courses
@@ -49,7 +58,9 @@ export default function HomePage() {
         {loading ? (
           <p className="text-center text-gray-500">Loading courses...</p>
         ) : courses.length === 0 ? (
-          <p className="text-center text-gray-500">No featured courses available.</p>
+          <p className="text-center text-gray-500">
+            No featured courses available.
+          </p>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {courses.map((course) => {
@@ -57,7 +68,7 @@ export default function HomePage() {
                 course.image?.startsWith("http")
                   ? course.image
                   : course.image
-                  ? `${MEDIA_BASE}${course.image}`
+                  ? `${SERVER_URL}${course.image}`
                   : "/assets/course-placeholder.jpg";
 
               return (
@@ -111,8 +122,14 @@ export default function HomePage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: <FaCertificate className="w-8 h-8" />, title: "Professional Certificates" },
-              { icon: <FaBookOpen className="w-8 h-8" />, title: "Specialization Paths" },
+              {
+                icon: <FaCertificate className="w-8 h-8" />,
+                title: "Professional Certificates",
+              },
+              {
+                icon: <FaBookOpen className="w-8 h-8" />,
+                title: "Specialization Paths",
+              },
               { icon: <FaUsers className="w-8 h-8" />, title: "Industry Mentorship" },
             ].map((cert) => (
               <div

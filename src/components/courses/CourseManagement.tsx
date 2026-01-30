@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 type Lesson = {
   id: string;
@@ -35,7 +35,7 @@ export default function CourseManagement({ params }: CourseManagementProps) {
     let mounted = true;
     (async () => {
       try {
-            const res = await axiosInstance.get(`/tutor/courses/${courseId}`);
+            const res = await api.get(`/tutor/courses/${courseId}`);
         if (!mounted) return;
         setCourse(res.data);
       } catch (e) {
@@ -50,7 +50,7 @@ export default function CourseManagement({ params }: CourseManagementProps) {
   const uploadFile = async (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
-      const res = await axiosInstance.post('/tutor/media/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.post('/tutor/media/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data.url;
   };
 
@@ -58,7 +58,7 @@ export default function CourseManagement({ params }: CourseManagementProps) {
     try {
       let video_url = null;
       if (video) video_url = await uploadFile(video);
-  const res = await axiosInstance.post(`/tutor/courses/${courseId}/lessons/add`, { title, content, video_url });
+  const res = await api.post(`/tutor/courses/${courseId}/lessons/add`, { title, content, video_url });
       setCourse((c: Course | null) => c ? ({ ...c, lessons: [...(c.lessons || []), (res.data as Lesson)] }) : c);
       setTitle(''); setContent(''); setVideo(null);
     } catch (err) {
@@ -70,7 +70,7 @@ export default function CourseManagement({ params }: CourseManagementProps) {
   const deleteLesson = async (lessonId: string) => {
     if (!confirm('Delete this lesson?')) return;
     try {
-  await axiosInstance.delete(`/tutor/lessons/${lessonId}/delete`);
+  await api.delete(`/tutor/lessons/${lessonId}/delete`);
       setCourse((c: Course | null) => c ? ({ ...c, lessons: (c.lessons || []).filter((l) => l.id !== lessonId) }) : c);
     } catch (err) {
       console.error(err);
@@ -97,7 +97,7 @@ export default function CourseManagement({ params }: CourseManagementProps) {
       if (editVideo) video_url = await uploadFile(editVideo);
       const payload: Record<string, unknown> = { title: editTitle, content: editContent };
       if (video_url) payload.video_url = video_url;
-  const res = await axiosInstance.put(`/tutor/lessons/${editingId}/update`, payload);
+  const res = await api.put(`/tutor/lessons/${editingId}/update`, payload);
       setCourse((c: Course | null) => c ? ({ ...c, lessons: (c.lessons || []).map((ls) => (ls.id === editingId ? (res.data as Lesson) : ls)) }) : c);
       cancelEdit();
     } catch (err) {

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { CourseModule } from "@/lib/types";
 
 interface ModuleCardProps {
@@ -14,14 +14,14 @@ export const ModuleCard = ({ module, courseId }: ModuleCardProps) => {
   const router = useRouter();
 
   const togglePublish = async () => {
-    await axiosInstance.patch(`/modules/${module.id}/publish`);
+    await api.patch(`/modules/${module.id}/publish`);
     router.refresh();
   };
 
   const deleteModule = async () => {
     if (!confirm("Delete this module?")) return;
 
-    await axiosInstance.delete(`/modules/${module.id}`);
+    await api.delete(`/modules/${module.id}`);
     router.refresh();
   };
 

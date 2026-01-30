@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Clock, DollarSign } from "lucide-react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 interface CourseRevenue {
   id: string;
@@ -36,7 +36,7 @@ export function TutorDashboardEarningsTab() {
     const fetchEarnings = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get("/tutor/earnings");
+        const response = await api.get("/tutor/earnings");
         setCourses(response.data.courses);
         setSummary(response.data.summary);
       } catch (err) {

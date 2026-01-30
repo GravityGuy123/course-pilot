@@ -1,0 +1,420 @@
+I prefer my prompts to be in a single enclosed block with a copy button for easy coping.
+Strictly ensure to generate it within a single enclosed block with a copy button for easy coping.
+
+
+PROMPT 1:
+Am building a course management e-learning website called CoursePilot with Nextjs (frontend) and Django (backend) but initially using one django app called core for everything but want to split it into multiple apps. i have installed the apps and added them into my installed apps in my config.settings file but the code still stays the same. Am going to drop the code for you to seperate them for the app (s) each is meant to be in while ensuring that it is production grade, scalable, bullet proof and it should utilize any necessary best practice(s) without breaking the existing code.
+You are a senior full-stack engineer working inside this repository.
+
+Stack:
+- Backend: Django (DRF)
+- Frontend: Next.js
+
+GOAL:
+Complete CoursePilot in a production-grade way. You MUST fully finish and stabilize the BACKEND first before starting any frontend work.
+
+════════════════════════════
+GLOBAL RULES
+════════════════════════════
+1. First READ the existing code. Explore all folders and apps before changing anything.
+2. Do NOT rewrite the project. Make only safe, incremental improvements.
+3. Do NOT break existing APIs, routes, database tables, UI flows, or env vars.
+4. Maintain backwards compatibility unless you provide a safe migration.
+5. All changes must be production-grade: secure, scalable, maintainable.
+6. Output must be code-first, not essays.
+
+════════════════════════════
+BACKEND-FIRST ENFORCEMENT
+════════════════════════════
+7. You are NOT allowed to touch the frontend until ALL core backend systems are implemented, stable, and tested.
+8. Backend is considered “complete” only when:
+   - Auth & permissions are solid
+   - Course, module, lesson models are complete
+   - Enrollment & progress tracking exist
+   - Instructor & admin APIs exist
+   - API is documented, paginated, secured
+   - Tests exist for critical flows
+   - Production settings are hardened
+
+════════════════════════════
+UI / UX RULES (FOR LATER)
+════════════════════════════
+9. When frontend work begins, you MUST preserve existing color theme, fonts, spacing, and layout style.
+10. All UI must be mobile-first and fully responsive across all screen sizes.
+11. Accessibility and performance are mandatory.
+
+════════════════════════════
+WORK MODE
+════════════════════════════
+- Do not over-explain. Do the engineering work.
+- Every response must include:
+  • what is being implemented
+  • exact file paths
+  • full code files (no snippets)
+  • commands to run
+  • how to verify
+
+════════════════════════════
+MANDATORY WORKFLOW
+════════════════════════════
+
+PHASE 1 — BACKEND AUDIT
+Silently inspect the Django backend.
+Output briefly:
+- what already exists
+- what is missing/broken
+- top backend blockers
+
+PHASE 2 — BACKEND COMPLETION
+Implement missing and weak backend systems in safe steps:
+- authentication & permissions
+- course domain models
+- enrollment & progress
+- instructor tools
+- admin tools
+- API quality (pagination, filtering, errors)
+- security hardening
+- tests
+- deployment readiness
+
+Do NOT move to frontend until backend is production-complete.
+
+PHASE 3 — FRONTEND START
+Only after backend completion:
+- connect frontend to backend
+- implement missing screens and flows
+- preserve theme
+- enforce full responsiveness
+- add loading/error/empty states
+
+════════════════════════════
+START NOW
+
+Scan the backend codebase.
+List what exists and the top blockers.
+Then immediately start fixing the backend.
+
+
+
+PROMPT 2:
+You are a senior full-stack engineer actively working inside this repository.
+
+Stack:
+- Backend: Django (DRF)
+- Frontend: Next.js
+
+MISSION:
+Finish CoursePilot into a COMPLETE, PRODUCTION-GRADE e-learning platform.
+
+You are authorized to continuously implement everything that is missing, weak, or incomplete WITHOUT asking me to confirm each step.
+
+Only pause if:
+- a change would break backwards compatibility,
+- a destructive migration is required,
+- or an irreversible architectural decision is unavoidable.
+
+Otherwise, proceed automatically.
+
+════════════════════════════
+GLOBAL RULES
+════════════════════════════
+1. First, read and understand the existing codebase.
+2. Do NOT rewrite the project. Only safe, incremental upgrades.
+3. Do NOT break existing APIs, database schema, UI flows, or env vars.
+4. Preserve existing design language (colors, fonts, spacing, layout style).
+5. All UI must be mobile-first and fully responsive across all screen sizes.
+6. Everything must be production-grade: secure, scalable, maintainable, tested.
+
+════════════════════════════
+BACKEND-FIRST LOCK
+════════════════════════════
+7. You MUST fully complete and harden the backend before touching frontend.
+8. Backend is “complete” only when:
+   - all unfinished code is filled
+   - auth & permissions are strict
+   - course, enrollment, progress, payments are production-safe
+   - instructor & admin tools exist
+   - APIs are paginated, filtered, documented
+   - tests cover critical flows
+   - settings are production-ready
+
+════════════════════════════
+MANDATORY COMPLETION MODE
+════════════════════════════
+9. You are REQUIRED to hunt for:
+   - unfinished features
+   - stub or weak logic
+   - commented-out or placeholder code
+   - missing APIs and workflows
+   - missing frontend pages and flows
+
+10. You must IMPLEMENT them, not just describe them.
+
+════════════════════════════
+WORK MODE
+════════════════════════════
+- Do not ask what to do next.
+- Do not wait for approval.
+- Proceed task-by-task until the platform is complete.
+
+Each response must include:
+• what you just completed
+• exact file paths
+• full code
+• commands run
+• how to verify
+
+════════════════════════════
+FRONTEND RULES (WHEN UNLOCKED)
+════════════════════════════
+- Maintain existing color theme and component style.
+- Build missing pages and flows.
+- Enforce full responsiveness.
+- Add loading, empty, and error states.
+- Connect cleanly to backend APIs.
+
+════════════════════════════
+END CONDITION
+════════════════════════════
+You stop only when CoursePilot is a fully working production platform with:
+- stable backend
+- functional frontend
+- complete learning flow
+- secure auth
+- instructor/admin tools
+- and deployment readiness.
+
+════════════════════════════
+START NOW
+
+Scan the backend.
+Then continuously implement everything required to finish the backend.
+After backend completion, automatically proceed to frontend completion.
+
+
+
+PROMPT 3:
+You are a senior Django engineer working inside this repo. We are restructuring the backend into proper domain apps.
+
+IMPORTANT CONTEXT
+- I have already DELETED the database and DELETED all migration files (fresh start).
+- So you are free to reorganize models across apps, then regenerate new initial migrations cleanly.
+
+GOAL
+Move every model, serializer, view, admin config, signals, permissions, and related code to the correct Django app so the architecture is clean and production-grade.
+
+ABSOLUTE RULES
+1) Do NOT keep domain models in core. core must contain only cross-cutting concerns (shared utilities, abstract base mixins, permissions, auth helpers).
+2) All domain models MUST live in their correct app:
+   - users: Custom User model and user-related models
+   - courses: Course, Module/Section, Lesson, Category/Tag, Reviews (if present)
+   - enrollment: Enrollment, LessonProgress/Progress, Certificate (and learning-tracking)
+   - payments: Payment, Transaction, WebhookEvent (if present)
+3) After moving code, update ALL imports everywhere (serializers/views/admin/tests/urls) so nothing references the old locations.
+4) Keep naming/style consistent with the existing project.
+5) Do NOT stop to ask me to confirm each step. Proceed automatically.
+   Only pause if you encounter an irreversible decision that requires choosing between 2 valid options.
+
+WORKFLOW (MANDATORY)
+Step 1 — Inventory
+- List every model class currently inside core/models.py
+- For each model: state the destination app (users/courses/enrollment/payments/core)
+
+Step 2 — Move Models
+- Move model classes into their destination app models.py
+- Leave core/models.py with ONLY abstract base classes/mixins (e.g., TimeStampedModel, SoftDeleteModel) and shared helpers.
+- Ensure moved models import shared base mixins from core if needed.
+
+Step 3 — Move/Align Related Code
+For each domain app, ensure it contains what belongs to it:
+- serializers.py: serializers for that app’s models
+- views.py: endpoints/viewsets for that domain
+- urls.py: app-level routes (if using)
+- admin.py: model registrations and admin config
+- signals.py: any signals for that domain
+- permissions.py: domain-specific permission helpers (core keeps shared generic permissions)
+
+Step 4 — Fix Cross-App Relationships
+- Update ForeignKey/ManyToMany imports/references to the new app locations.
+- Ensure circular imports are avoided (use get_user_model() or settings.AUTH_USER_MODEL where appropriate).
+
+Step 5 — Central Routing
+- Ensure config/urls.py includes each app’s urls cleanly (api versioning if already used).
+- Keep existing endpoint paths unchanged unless absolutely necessary.
+
+Step 6 — Regenerate DB Schema
+After restructuring:
+- Run: python manage.py makemigrations
+- Run: python manage.py migrate
+- Run: python manage.py createsuperuser (optional)
+- Run: python manage.py test -v 2
+Fix any failures until tests are green.
+
+OUTPUT FORMAT (VERY IMPORTANT)
+For every change you make:
+1) Briefly say what you changed (1–2 lines max)
+2) Show exact file paths
+3) Show FULL updated file contents (no snippets)
+4) Give exact commands to run
+5) Give quick verification steps (what endpoint/page should work)
+
+START NOW
+Begin Step 1: list the models currently in core/models.py and their destination apps.
+Then proceed to Steps 2–6 automatically.
+
+
+
+We have duplicated endpoints: code was copied into the correct domain apps but old versions still remain in core/views.py and possibly core/urls.py.
+
+MISSION
+Deduplicate and enforce canonical ownership of endpoints:
+- Each endpoint/view must exist in exactly ONE place (the correct domain app).
+- core must not contain domain endpoints. core should only contain shared infrastructure or a temporary thin router (if needed).
+
+NON-NEGOTIABLE RULES
+1) Do NOT break existing API paths. All existing URLs must keep working.
+2) Remove duplicates: do not leave a second implementation behind in core.
+3) If an endpoint currently lives in core but belongs to a domain app, the canonical implementation must be moved to the domain app.
+4) core may keep ONLY:
+   - healthcheck/root endpoints (optional)
+   - CSRF utility endpoint (optional if used across apps)
+   - shared auth utilities (NOT domain endpoints)
+   - a temporary import-and-forward wrapper ONLY if needed to preserve URL paths
+5) Proceed automatically. Do not ask for confirmation unless a path change is unavoidable.
+
+WORKFLOW (MANDATORY)
+Step 1 — Inventory
+- List every URL pattern in core/urls.py and every view in core/views.py.
+- For each, mark:
+  a) keep in core (only if truly cross-cutting)
+  b) move to [users|courses|lessons|enrollment|payments|admin_panel|notifications|analytics]
+  c) already moved elsewhere (duplicate)
+
+Step 2 — Canonicalize
+- For every endpoint that already exists in a domain app, DELETE the duplicate code from core/views.py.
+- Ensure core/urls.py routes to the domain app urls via include(), not direct duplicated views.
+- If core/urls.py currently maps to a core view that must keep the same path, rewire it to point to the domain app view (direct import) OR better: include the app’s urls so the path stays identical.
+
+Step 3 — Clean Architecture
+- Create app-level urls.py for each domain app if missing (users/urls.py, courses/urls.py, enrollment/urls.py, payments/urls.py, etc).
+- Update config/urls.py to include each app router in a clean, versioned structure (keep existing paths unchanged).
+
+Step 4 — Validate
+- Run: python manage.py test -v 2
+- Run: python manage.py runserver and hit the key endpoints to confirm no duplicates or conflicts.
+- Fix errors until green.
+
+OUTPUT REQUIREMENTS
+For each batch of changes:
+1) What changed (max 2 lines)
+2) File paths changed
+3) Full file contents (no snippets)
+4) Commands to run
+5) Verification steps
+
+START NOW
+Begin by inventorying core/urls.py and core/views.py, locate duplicates, then remove duplicates and rewire URLs to the correct apps while keeping all existing paths working.
+
+
+PROMPT 4:
+Is there anything in core that should be in users if not is there something in core meant for users i should delete?
+
+
+
+
+PROMPT 4: Payment → Enrollment Integration (CoursePilot)
+
+
+
+
+PROMPT 5: Payment → Enrollment Integration (CoursePilot)
+You are assisting me in refactoring a production-grade Django + DRF backend for an e-learning platform called CoursePilot.
+
+I recently refactored from one monolithic “core” app into multiple domain-based apps:
+
+- users (custom user model, auth, JWT cookies, roles)
+- courses (courses, categories, modules, soft delete)
+- lessons (lessons, uploads, completion tracking)
+- enrollment (enrollments, lesson progress, certificates)
+- payments (webhooks, payment records)
+- notifications (in-app notifications)
+- analytics (site + course stats)
+- admin_panel (THIS is what we are working on now)
+
+Authentication:
+- JWT stored in HttpOnly cookies
+- Custom CookieJWTAuthentication class
+- Role flags on user: is_admin, is_moderator, is_tutor, is_student
+
+Soft delete system:
+- SoftDeleteModel exists
+- Some models use objects_all to include deleted rows
+- Courses and modules support restore windows
+
+Your task:
+Refactor and/or generate the complete admin_panel app so that it is clean, scalable, and production-grade.
+
+The admin_panel app must:
+1) Contain only admin-domain logic (no duplicated models)
+2) Import models from their correct apps (not core.models)
+3) Use CookieJWTAuthentication explicitly
+4) Use proper permissions (IsAdmin / IsAdminOrModerator)
+5) Support pagination, filtering, and searching
+6) Be safe for production (transactions, validations, idempotency awareness)
+
+When I paste my current admin_panel code and any old core admin-related code, you must output FULL WORKING CODE (not snippets) for:
+
+- admin_panel/views.py
+- admin_panel/serializers.py
+- admin_panel/urls.py
+- admin_panel/models.py (only if truly needed)
+- admin_panel/services.py or permissions.py (if needed)
+
+Admin Panel features that must be supported:
+
+A) Dashboard
+- total users
+- total courses (published, unpublished, deleted)
+- total enrollments
+- total payments + breakdown by status
+- recent activity if possible
+
+B) User management
+- list users (search + filter by role)
+- view user details
+- update roles (tutor, moderator, admin)
+- deactivate/reactivate users
+- show audit logs if available
+
+C) Course management
+- list all courses (including deleted)
+- view course detail
+- force publish/unpublish
+- soft delete / restore
+- see enrollments per course
+
+D) Payment management
+- list payments (filter by status, provider, date)
+- view payment detail
+- mark refunded (if supported)
+- webhook safety respected
+
+E) Moderation / applications (if present)
+- list applications
+- approve/reject
+- create RoleApprovalLog
+- notify user
+
+Rules:
+- No references to core.models unless core still owns that model
+- Use transactions where data integrity matters
+- Return frontend-friendly responses
+- Prefer explicit imports and clear separation of concerns
+
+Output format:
+- Full files (clearly labeled)
+- Short checklist of what old code can be deleted
+- Any required URL additions to config/urls.py
+
+
+

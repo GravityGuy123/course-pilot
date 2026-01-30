@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth, axiosInstance } from "@/context/auth-context";
+import { useAuth } from "@/context/auth-context";
+import { authApi } from "@/lib/axios.config";
 import { isAxiosError } from "axios";
 import UserAvatar from "@/components/shared/UserAvatar";
 import Image from "next/image";
@@ -61,7 +62,7 @@ export default function UserSettingsPage() {
     if (data.avatar instanceof File) formData.append("avatar", data.avatar);
 
     try {
-      await axiosInstance.put("/users/me", formData, {
+      await authApi.put("/users/me", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -140,7 +141,9 @@ export default function UserSettingsPage() {
           </label>
         </div>
         {errors.avatar && (
-          <p className="text-sm text-red-600">{String(errors.avatar.message)}</p>
+          <p className="text-sm text-red-600">
+            {String(errors.avatar.message)}
+          </p>
         )}
 
         {/* Full Name */}
@@ -187,7 +190,9 @@ export default function UserSettingsPage() {
 
         {/* Password */}
         <div>
-          <label className="block font-medium mb-1">New Password (optional)</label>
+          <label className="block font-medium mb-1">
+            New Password (optional)
+          </label>
           <input
             type="password"
             disabled={isSubmitting}

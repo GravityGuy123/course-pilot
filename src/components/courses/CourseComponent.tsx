@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { CoursePageDetails } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
@@ -29,7 +29,7 @@ export const CourseComponent = ({ course }: CourseComponentProps) => {
   useEffect(() => {
     const fetchModules = async () => {
       try {
-        const response = await axiosInstance.get(
+        const response = await api.get(
           `/tutor/courses/${course.id}/modules`
         );
         setModules(response.data);
@@ -46,7 +46,7 @@ export const CourseComponent = ({ course }: CourseComponentProps) => {
   // -------------------- ENROLL --------------------
   const enroll = async () => {
     try {
-      await axiosInstance.post(`/courses/${course.id}/enroll`);
+      await api.post(`/courses/${course.id}/enroll`);
       setMsg("Enrolled successfully");
     } catch (error: unknown) {
       let message = "Enroll failed";

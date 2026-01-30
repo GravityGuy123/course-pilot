@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, Download, BookOpen, Trash2 } from "lucide-react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import AdminStatusBadge from "./AdminStatusBadge";
 
 interface AdminCourse {
@@ -24,7 +24,7 @@ export default function AdminCoursesTab() {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get<AdminCourse[]>("/admin/courses");
+        const res = await api.get<AdminCourse[]>("/admin/courses");
         setCourses(res.data);
       } catch (error) {
         console.error("Failed to fetch courses:", error);
@@ -43,7 +43,7 @@ export default function AdminCoursesTab() {
     if (!confirm("Are you sure you want to delete this course?")) return;
 
     try {
-      await axiosInstance.delete(`/admin/courses/${courseId}`);
+      await api.delete(`/admin/courses/${courseId}`);
       setCourses((prev) => prev.filter((c) => c.id !== courseId));
     } catch (error) {
       console.error("Failed to delete course:", error);

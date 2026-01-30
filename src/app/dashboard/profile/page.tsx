@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { AuthContext } from "@/context/auth-context";
 import EmailVerificationForm from "@/components/auth/EmailVerificationForm";
 import { useEffect, useState } from "react";
@@ -49,7 +49,7 @@ function NotificationsPanel() {
     let mounted = true;
     (async () => {
       try {
-        const res = await (await import('@/lib/axios.config')).axiosInstance.get('/notifications');
+        const res = await (await import('@/lib/axios.config')).api.get('/notifications');
         if (!mounted) return;
         setNotes(res.data || []);
       } catch {
@@ -76,7 +76,7 @@ function NotificationsPanel() {
             {!n.is_read && (
               <button className="ml-4 px-2 py-1 bg-violet-600 text-white rounded" onClick={async () => {
                 try {
-                  await (await import('@/lib/axios.config')).axiosInstance.post(`/notifications/${n.id}/read`);
+                  await (await import('@/lib/axios.config')).api.post(`/notifications/${n.id}/read`);
                   setNotes((prev) => prev.map(p => p.id === n.id ? { ...p, is_read: true } : p));
                 } catch {
                   // ignore

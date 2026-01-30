@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { StatsCard } from "@/components/dashboard/shared/StatsCard";
 import { Users, BookOpen, DollarSign, TrendingUp } from "lucide-react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 interface TutorStats {
   total_students: number;
@@ -22,7 +22,7 @@ export function TutorDashboardStats() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await axiosInstance.get<TutorStats>("/tutor/dashboard-stats");
+        const res = await api.get<TutorStats>("/tutor/dashboard-stats");
         setStats(res.data);
       } catch (err) {
         console.error("Failed to fetch tutor stats:", err);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Save, Loader2, AlertCircle } from "lucide-react";
 
 type SettingValue = string | number | boolean;
@@ -24,7 +24,7 @@ export default function AdminSettingsTab() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await axiosInstance.get<AdminSettings>("/admin/settings");
+        const res = await api.get<AdminSettings>("/admin/settings");
         setSettings(res.data);
       } catch (err) {
         console.error(err);
@@ -51,7 +51,7 @@ export default function AdminSettingsTab() {
     setSuccess(null);
 
     try {
-      await axiosInstance.patch("/admin/settings", settings);
+      await api.patch("/admin/settings", settings);
       setSuccess("Settings saved successfully");
     } catch (err) {
       console.error(err);

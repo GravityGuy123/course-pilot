@@ -1,11 +1,11 @@
-import { axiosInstance } from "./axios.config";
+import { api } from "./axios.config";
 import { Product } from "./types";
 
 export async function GetProductDetails(
   id: string
 ): Promise<Product | undefined> {
   try {
-    const response = await axiosInstance.get(`/api/products/details/${id}`);
+  const response = await api.get(`/products/details/${id}`);
     return response.data;
   } catch (err) {
     console.error(err);
@@ -15,7 +15,7 @@ export async function GetProductDetails(
 
 export async function GetAllProductDetails(): Promise<Product[] | undefined> {
   try {
-    const response = await axiosInstance.get("/api/products/all");
+  const response = await api.get("/products/all");
     return response.data;
   } catch (err) {
     console.error(err);
@@ -28,7 +28,7 @@ export const getCategories = async (
   slug: string
 ): Promise<Product[] | undefined> => {
   try {
-    const response = await axiosInstance.get(`/api/categories/${slug}/`);
+  const response = await api.get(`/categories/${slug}/`);
     return response.data;
   } catch {
     return undefined;

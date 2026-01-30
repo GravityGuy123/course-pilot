@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { axiosInstance, baseUrl } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 /* ---------------- TYPES ---------------- */
 
@@ -41,7 +41,7 @@ interface TutorDashboardCourse {
   image?: string;
 }
 
-const MEDIA_BASE = baseUrl.replace("/api", "");
+const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 export default function TutorDashboardCoursesTab() {
   const [courses, setCourses] = useState<TutorDashboardCourse[]>([]);
@@ -76,39 +76,41 @@ export default function TutorDashboardCoursesTab() {
     `;
   };
 
-
   /* ---------------- FETCH COURSES ---------------- */
 
   useEffect(() => {
+    let alive = true;
+
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get<TutorDashboardCourse[]>(
-          "/tutor/courses"
-        );
-        setCourses(res.data);
+        setError(null);
+
+        // ✅ /api/courses/tutor/
+        const res = await api.get<TutorDashboardCourse[]>("/courses/tutor/");
+
+        if (alive) setCourses(res.data);
       } catch (err) {
         console.error("Failed to fetch tutor courses:", err);
-        setError("Failed to load courses.");
+        if (alive) setError("Failed to load courses.");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
 
     fetchCourses();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   if (loading) return <p className="text-center mt-10">Loading courses...</p>;
-  if (error)
-    return (
-      <p className="text-center mt-10 text-red-500">{error}</p>
-    );
-  if (courses.length === 0)
-    return <p className="text-center mt-10">No courses found.</p>;
+  if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
+  if (courses.length === 0) return <p className="text-center mt-10">No courses found.</p>;
 
   return (
     <>
-      {/* ---------- SECTION HEADER ---------- */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Your Courses</h2>
 
@@ -121,7 +123,6 @@ export default function TutorDashboardCoursesTab() {
         </Button>
       </div>
 
-      {/* ---------- COURSES GRID ---------- */}
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {courses.map((course) => {
           const studentCount = course.student_count ?? 0;
@@ -132,7 +133,7 @@ export default function TutorDashboardCoursesTab() {
             course.image?.startsWith("http")
               ? course.image
               : course.image
-              ? `${MEDIA_BASE}${course.image}`
+              ? `${SERVER_URL}${course.image}`
               : null;
 
           return (
@@ -140,7 +141,6 @@ export default function TutorDashboardCoursesTab() {
               key={course.id}
               className="dark:bg-gray-800 hover:shadow-lg transition-shadow flex flex-col overflow-hidden"
             >
-              {/* ---------- IMAGE ---------- */}
               {imageUrl && (
                 <div className="relative w-full h-40">
                   <Image
@@ -160,11 +160,8 @@ export default function TutorDashboardCoursesTab() {
               )}
 
               <CardContent className="flex flex-col gap-2 p-4">
-                {/* ---------- TITLE & STATUS ---------- */}
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-sm truncate">
-                    {course.title}
-                  </h3>
+                  <h3 className="font-semibold text-sm truncate">{course.title}</h3>
 
                   <Badge
                     className={`relative flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide rounded-full ${getStatusBadgeClasses(
@@ -177,24 +174,17 @@ export default function TutorDashboardCoursesTab() {
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
                       </span>
                     )}
-
                     {course.is_published ? "Published" : "Draft"}
                   </Badge>
-
                 </div>
 
                 {course.level && (
-                  <p className="text-xs text-muted-foreground">
-                    Level: {course.level}
-                  </p>
+                  <p className="text-xs text-muted-foreground">Level: {course.level}</p>
                 )}
 
                 {course.tutor && (
                   <p className="text-xs text-muted-foreground">
-                    By{" "}
-                    <span className="font-medium">
-                      {course.tutor.full_name}
-                    </span>
+                    By <span className="font-medium">{course.tutor.full_name}</span>
                   </p>
                 )}
 
@@ -202,7 +192,6 @@ export default function TutorDashboardCoursesTab() {
                   {course.description ?? ""}
                 </p>
 
-                {/* ---------- STATS + ACTIONS ---------- */}
                 <div className="flex items-center justify-between mt-2 text-xs">
                   <div className="flex flex-wrap gap-3">
                     <span className="flex items-center gap-1">
@@ -221,13 +210,13 @@ export default function TutorDashboardCoursesTab() {
                     </span>
                   </div>
 
-                  {/* ---------- DROPDOWN (ITEM-SPECIFIC ONLY) ---------- */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="hover:bg-violet-600 hover:text-white hover:dark:bg-indigo-500">
+                        className="hover:bg-violet-600 hover:text-white hover:dark:bg-indigo-500"
+                      >
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -235,33 +224,21 @@ export default function TutorDashboardCoursesTab() {
                     <DropdownMenuContent align="end" className="min-w-[140px]">
                       <DropdownMenuItem
                         className="gap-2 cursor-pointer"
-                        onClick={() =>
-                          router.push(
-                            `/dashboard/tutor/courses/${course.id}`
-                          )
-                        }
+                        onClick={() => router.push(`/dashboard/tutor/courses/${course.id}`)}
                       >
                         <Eye className="h-4 w-4" /> View
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
                         className="gap-2 cursor-pointer"
-                        onClick={() =>
-                          router.push(
-                            `/dashboard/tutor/courses/${course.id}/update`
-                          )
-                        }
+                        onClick={() => router.push(`/dashboard/tutor/courses/${course.id}/update`)}
                       >
                         <Edit className="h-4 w-4" /> Edit
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
                         className="gap-2 cursor-pointer"
-                        onClick={() =>
-                          router.push(
-                            `/dashboard/tutor/courses/${course.id}/analytics`
-                          )
-                        }
+                        onClick={() => router.push(`/dashboard/tutor/courses/${course.id}/analytics`)}
                       >
                         <BarChart3 className="h-4 w-4" /> Analytics
                       </DropdownMenuItem>

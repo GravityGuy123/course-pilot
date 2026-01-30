@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { api } from "@/lib/axios.config";
 
 interface Lesson {
   id: string;
@@ -22,7 +22,9 @@ export default function UpdateLessonPage() {
   useEffect(() => {
     const fetchLesson = async () => {
       try {
-        const response = await axios.get<Lesson>(`/api/lessons/${lessonid}`);
+        const response = await api.get<Lesson>(
+          `/lessons/${lessonid}`
+        );
         setLesson(response.data);
       } catch (error) {
         console.error("Failed to fetch lesson:", error);
@@ -39,8 +41,10 @@ export default function UpdateLessonPage() {
 
     setSubmitting(true);
     try {
-      await axios.patch(`/api/lessons/${lessonid}`, lesson);
-      router.push(`/dashboard/tutor/courses/${lesson.id}/modules/${lessonid}/lessons/${lessonid}`);
+      await api.patch(`/lessons/${lessonid}`, lesson);
+      router.push(
+        `/dashboard/tutor/courses/${lesson.id}/modules/${lessonid}/lessons/${lessonid}`
+      );
     } catch (error) {
       console.error("Failed to update lesson:", error);
     } finally {
@@ -67,14 +71,18 @@ export default function UpdateLessonPage() {
         <input
           type="number"
           value={lesson.order}
-          onChange={(e) => setLesson({ ...lesson, order: Number(e.target.value) })}
+          onChange={(e) =>
+            setLesson({ ...lesson, order: Number(e.target.value) })
+          }
         />
       </label>
       <label>
         Description:
         <textarea
           value={lesson.description}
-          onChange={(e) => setLesson({ ...lesson, description: e.target.value })}
+          onChange={(e) =>
+            setLesson({ ...lesson, description: e.target.value })
+          }
         />
       </label>
       <label>

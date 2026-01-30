@@ -2,8 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
@@ -30,41 +29,38 @@ export default function DeleteModulePage() {
   //   }
   // };
 
-
   const params = useParams();
-  const courseId =
-    typeof params?.id === "string" ? params.id : null;
+  const courseId = typeof params?.id === "string" ? params.id : null;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-
   const handleDelete = async () => {
-      if (!moduleid) {
-        setError("Invalid module ID.");
-        return;
-      }
-  
-      setLoading(true);
-      setError("");
-  
-      try {
-        await axiosInstance.delete(`/tutor/courses/${courseId}/modules/${moduleid}/delete`);
-        // tutor/courses/<uuid:course_id>/modules/<uuid:module_id>/delete
-        router.push(`/dashboard/tutor/courses/${id}/modules`);
-      } catch {
-        setError("Unable to delete this module. Please try again.");
-        setLoading(false);
-      }
-    };
+    if (!moduleid) {
+      setError("Invalid module ID.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await api.delete(
+        `/tutor/courses/${courseId}/modules/${moduleid}/delete`
+      );
+      // tutor/courses/<uuid:course_id>/modules/<uuid:module_id>/delete
+      router.push(`/dashboard/tutor/courses/${id}/modules`);
+    } catch {
+      setError("Unable to delete this module. Please try again.");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-xl mx-auto mt-10 px-4">
       <div className="rounded-2xl border border-red-200/60 dark:border-red-900/50 bg-white dark:bg-gray-900 shadow-sm p-8 space-y-6">
-
         {/* Header */}
         <div className="flex items-center gap-3">
-
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400">
             <AlertTriangle className="h-5 w-5" />
           </div>
@@ -78,7 +74,8 @@ export default function DeleteModulePage() {
         <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-400">
           You are about to permanently delete this module.
           <span className="font-medium text-gray-800 dark:text-gray-200">
-            {" "}This action cannot be undone.
+            {" "}
+            This action cannot be undone.
           </span>{" "}
           All lessons under it will also be removed.
         </p>

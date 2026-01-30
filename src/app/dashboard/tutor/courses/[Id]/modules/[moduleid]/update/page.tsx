@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 interface Module {
   id: string;
@@ -26,7 +26,7 @@ export default function UpdateModulePage() {
   useEffect(() => {
     const fetchModule = async () => {
       try {
-        const response = await axiosInstance.get<Module>(
+        const response = await api.get<Module>(
           `/tutor/courses/${courseId}/modules/${moduleId}` // <-- correct endpoint
         );
         setModule(response.data);
@@ -47,7 +47,7 @@ export default function UpdateModulePage() {
 
     setSubmitting(true);
     try {
-      await axiosInstance.patch(
+      await api.patch(
         `/tutor/courses/${courseId}/modules/${moduleId}/update`, // <-- update endpoint
         module
       );
@@ -75,6 +75,7 @@ export default function UpdateModulePage() {
             Title
           </label>
           <input
+            aria-label="Module Title"
             type="text"
             value={module.title}
             onChange={(e) =>
@@ -90,6 +91,7 @@ export default function UpdateModulePage() {
             Order
           </label>
           <input
+            aria-label="Module Order"
             type="number"
             value={module.order}
             onChange={(e) =>
@@ -105,6 +107,7 @@ export default function UpdateModulePage() {
             Description
           </label>
           <textarea
+            aria-label="Module Description"
             value={module.description}
             onChange={(e) =>
               setModule({ ...module, description: e.target.value })

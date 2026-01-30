@@ -1,30 +1,30 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import EmailVerificationForm from '../EmailVerificationForm';
-import { axiosInstance } from '@/lib/axios.config';
-import type { AxiosResponse, InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import EmailVerificationForm from "../EmailVerificationForm";
+import { authApi } from "@/lib/axios.config";
+import type { AxiosResponse, InternalAxiosRequestConfig, AxiosHeaders } from "axios";
 
-vi.mock('@/lib/axios.config', () => ({
-  axiosInstance: {
+vi.mock("@/lib/axios.config", () => ({
+  authApi: {
     post: vi.fn(),
   },
 }));
 
-const mockedAxiosPost = axiosInstance.post as unknown as ReturnType<typeof vi.fn>;
+const mockedAxiosPost = authApi.post as unknown as ReturnType<typeof vi.fn>;
 
-describe('EmailVerificationForm', () => {
-  const email = 'test@example.com';
+describe("EmailVerificationForm", () => {
+  const email = "test@example.com";
 
   beforeEach(() => {
     mockedAxiosPost.mockReset();
   });
 
-  it('sends a code when Send code is clicked', async () => {
+  it("sends a code when Send code is clicked", async () => {
     const mockResponse: AxiosResponse<{ status: number }> = {
       data: { status: 201 },
       status: 201,
-      statusText: 'Created',
+      statusText: "Created",
       headers: {} as AxiosHeaders,
       config: {} as InternalAxiosRequestConfig,
     };
@@ -35,15 +35,15 @@ describe('EmailVerificationForm', () => {
     fireEvent.click(screen.getByText(/Send code/i));
 
     await waitFor(() =>
-      expect(mockedAxiosPost).toHaveBeenCalledWith('/email/send-code', { email })
+      expect(mockedAxiosPost).toHaveBeenCalledWith("/email/send-code/", { email })
     );
   });
 
-  it('verifies the code when Verify is clicked', async () => {
+  it("verifies the code when Verify is clicked", async () => {
     const sendCodeResponse: AxiosResponse<{ status: number }> = {
       data: { status: 201 },
       status: 201,
-      statusText: 'Created',
+      statusText: "Created",
       headers: {} as AxiosHeaders,
       config: {} as InternalAxiosRequestConfig,
     };
@@ -51,7 +51,7 @@ describe('EmailVerificationForm', () => {
     const verifyCodeResponse: AxiosResponse<{ status: number }> = {
       data: { status: 200 },
       status: 200,
-      statusText: 'OK',
+      statusText: "OK",
       headers: {} as AxiosHeaders,
       config: {} as InternalAxiosRequestConfig,
     };
@@ -61,14 +61,14 @@ describe('EmailVerificationForm', () => {
 
     render(<EmailVerificationForm email={email} />);
     fireEvent.change(screen.getByPlaceholderText(/Enter code/i), {
-      target: { value: 'ABC123' },
+      target: { value: "ABC123" },
     });
     fireEvent.click(screen.getByText(/Verify/i));
 
     await waitFor(() =>
-      expect(mockedAxiosPost).toHaveBeenCalledWith('/email/verify', {
+      expect(mockedAxiosPost).toHaveBeenCalledWith("/email/verify/", {
         email,
-        code: 'ABC123',
+        code: "ABC123",
       })
     );
   });

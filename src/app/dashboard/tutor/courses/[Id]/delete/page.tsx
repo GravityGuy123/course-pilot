@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState } from "react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
@@ -27,7 +27,7 @@ export default function DeleteCoursePage() {
     setError("");
 
     try {
-      await axiosInstance.delete(
+      await api.delete(
         `/tutor/course/${courseId}/delete/`
       );
 

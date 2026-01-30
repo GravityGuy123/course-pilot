@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { axiosInstance, baseUrl } from "@/lib/axios.config";
+import { api, bootstrapCsrf } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AllCoursesPageProps } from "@/lib/types";
 import { Trash2, Clock, Users, RotateCw } from "lucide-react";
@@ -11,7 +11,7 @@ import { useTheme } from "next-themes";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 
-const MEDIA_BASE = baseUrl.replace("/api", "");
+const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 export default function DeletedCoursesPage() {
   const [deletedCourses, setDeletedCourses] = useState<AllCoursesPageProps[]>([]);
@@ -24,56 +24,59 @@ export default function DeletedCoursesPage() {
   const router = useRouter();
 
   useEffect(() => {
+    let alive = true;
+
     const fetchDeletedCourses = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/tutor/courses/deleted");
-        setDeletedCourses(res.data);
+        setError(null);
+
+        // ✅ /api/courses/tutor/deleted/
+        const res = await api.get("/courses/tutor/deleted/");
+        if (alive) setDeletedCourses(res.data);
       } catch {
-        setError("Failed to load deleted courses.");
+        if (alive) setError("Failed to load deleted courses.");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
 
     fetchDeletedCourses();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   const handleRestoreCourse = async (courseId: string) => {
     try {
-      await axiosInstance.patch(`/tutor/courses/${courseId}/restore`);
+      await bootstrapCsrf();
 
-      // Remove restored course from UI list
+      // ✅ /api/courses/tutor/<id>/restore/
+      await api.patch(`/courses/tutor/${courseId}/restore/`);
+
       setDeletedCourses((prev) => prev.filter((c) => c.id !== courseId));
 
       SuccessToast("Course restored successfully.", isDark, {
         position: "top-center",
       });
 
-      // 🔥 Redirect to tutor course details page
       router.push(`/dashboard/tutor/courses/${courseId}`);
-
     } catch (err) {
       const error = err as AxiosError;
 
       if (error.response?.status === 403) {
-        ErrorToast(
-          "Permission denied. You cannot restore this course.",
-          isDark,
-          { position: "top-center" }
-        );
+        ErrorToast("Permission denied. You cannot restore this course.", isDark, {
+          position: "top-center",
+        });
       } else if (error.response?.status === 410) {
-        ErrorToast(
-          "Restore window expired. Course permanently deleted.",
-          isDark,
-          { position: "top-center" }
-        );
+        ErrorToast("Restore window expired. Course permanently deleted.", isDark, {
+          position: "top-center",
+        });
       } else {
-        ErrorToast(
-          "Failed to restore course. Try again.",
-          isDark,
-          { position: "top-center" }
-        );
+        ErrorToast("Failed to restore course. Try again.", isDark, {
+          position: "top-center",
+        });
       }
     }
   };
@@ -95,7 +98,7 @@ export default function DeletedCoursesPage() {
             course.image?.startsWith("http")
               ? course.image
               : course.image
-              ? `${MEDIA_BASE}${course.image}`
+              ? `${SERVER_URL}${course.image}`
               : null;
 
           const daysRemaining = course.days_remaining ?? 0;

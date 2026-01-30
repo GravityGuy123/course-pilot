@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import axios from "axios";
+import { api, bootstrapCsrf } from "@/lib/axios.config";
 
 interface Lesson {
   id: string;
@@ -18,41 +18,67 @@ export default function LessonListPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchLessons = async () => {
+    let alive = true;
+
+    (async () => {
       try {
-        const response = await axios.get<Lesson[]>(
-          `/api/modules/${moduleid}/lessons`
+        await bootstrapCsrf();
+        const res = await api.get<Lesson[]>(
+          `/courses/${id}/modules/${moduleid}/lessons/`
         );
-        setLessons(response.data);
+        if (alive) setLessons(res.data);
       } catch (error) {
         console.error("Failed to fetch lessons:", error);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
+    })();
+
+    return () => {
+      alive = false;
     };
-    fetchLessons();
-  }, [moduleid]);
+  }, [id, moduleid]);
 
   if (loading) return <p>Loading lessons...</p>;
 
   return (
     <div>
       <h1>Lessons</h1>
-      <button onClick={() => router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/create`)}>
+      <button
+        onClick={() =>
+          router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/create`)
+        }
+      >
         Create Lesson
       </button>
+
       <ul>
         {lessons.map((lesson) => (
           <li key={lesson.id}>
-            <strong>{lesson.order}. {lesson.title}</strong>
+            <strong>
+              {lesson.order}. {lesson.title}
+            </strong>
             <p>{lesson.description}</p>
-            <button onClick={() => router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/${lesson.id}`)}>
+
+            <button
+              onClick={() =>
+                router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/${lesson.id}`)
+              }
+            >
               View
             </button>
-            <button onClick={() => router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/${lesson.id}/update`)}>
+            <button
+              onClick={() =>
+                router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/${lesson.id}/update`)
+              }
+            >
               Edit
             </button>
-            <button onClick={() => router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/${lesson.id}/delete`)}>
+            <button
+              onClick={() =>
+                router.push(`/dashboard/tutor/courses/${id}/modules/${moduleid}/lessons/${lesson.id}/delete`)
+              }
+            >
               Delete
             </button>
           </li>

@@ -2,7 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 
 interface ModuleForm {
@@ -28,7 +28,7 @@ export default function CreateModulePage() {
     setSubmitting(true);
 
     try {
-      await axiosInstance.post( `/tutor/courses/${id}/modules/add`, form);
+      await api.post( `/tutor/courses/${id}/modules/add`, form);
       router.push(`/dashboard/tutor/courses/${id}/modules`);
     } catch (error) {
       console.error("Failed to create module:", error);

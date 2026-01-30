@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import AdminAnalyticsChart from "./AdminAnalyticsChart";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 // -------------------------
 // Define type and export
@@ -26,7 +26,7 @@ export default function AdminAnalyticsTab() {
     const fetchAnalytics = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get<AnalyticsRow[]>("/admin/analytics/site");
+        const res = await api.get<AnalyticsRow[]>("/admin/analytics/site");
         setAnalyticsRows(res.data);
       } catch (error) {
         console.error("Failed to fetch analytics:", error);

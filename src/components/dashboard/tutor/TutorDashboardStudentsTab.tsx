@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, Column } from "../shared/DataTable";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Skeleton } from "@/components/ui/skeleton"; // Optional if you have a skeleton component
 
 interface Student {
@@ -26,7 +26,7 @@ export function TutorDashboardStudentsTab() {
     const fetchStudents = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get<Student[]>("/tutor/students");
+        const response = await api.get<Student[]>("/tutor/students");
         setStudents(response.data);
       } catch (err) {
         console.error(err);

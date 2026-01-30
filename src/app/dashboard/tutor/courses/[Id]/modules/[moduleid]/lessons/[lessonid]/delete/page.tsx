@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { api } from "@/lib/axios.config";
 import axios from "axios";
 
 export default function DeleteLessonPage() {
@@ -13,7 +14,7 @@ export default function DeleteLessonPage() {
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      await axios.delete(`/api/lessons/${lessonid}`);
+      await api.delete(`/lessons/${lessonid}`);
       router.push("/dashboard/tutor/courses");
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -30,7 +31,10 @@ export default function DeleteLessonPage() {
     <div>
       <h1>Delete Lesson</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
-      <p>Are you sure you want to delete this lesson? This action cannot be undone.</p>
+      <p>
+        Are you sure you want to delete this lesson? This action cannot be
+        undone.
+      </p>
       <button onClick={handleDelete} disabled={deleting}>
         {deleting ? "Deleting..." : "Yes, Delete"}
       </button>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
+import { api } from "@/lib/axios.config";
 
 interface Lesson {
   id: string;
@@ -20,7 +20,9 @@ export default function LessonViewPage() {
   useEffect(() => {
     const fetchLesson = async () => {
       try {
-        const response = await axios.get<Lesson>(`/api/lessons/${lessonid}`);
+        const response = await api.get<Lesson>(
+          `/lessons/${lessonid}`
+        );
         setLesson(response.data);
       } catch (error) {
         console.error("Failed to fetch lesson:", error);
@@ -36,7 +38,9 @@ export default function LessonViewPage() {
 
   return (
     <div>
-      <h1>{lesson.order}. {lesson.title}</h1>
+      <h1>
+        {lesson.order}. {lesson.title}
+      </h1>
       <p>{lesson.description}</p>
       <div dangerouslySetInnerHTML={{ __html: lesson.content }} />
     </div>

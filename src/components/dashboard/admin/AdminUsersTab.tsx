@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Search, Download, Trash2, User } from "lucide-react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import AdminStatusBadge from "./AdminStatusBadge";
 import UserAvatar from "@/components/shared/UserAvatar";
 
@@ -24,7 +24,7 @@ export default function AdminUsersTab() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axiosInstance.get<AdminUser[]>("/admin/users");
+        const res = await api.get<AdminUser[]>("/admin/users");
         setUsers(res.data);
       } catch (err) {
         console.error("Failed to fetch users:", err);

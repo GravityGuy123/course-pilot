@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { Eye, Edit, Trash2, BookOpen } from "lucide-react";
 
@@ -22,7 +22,7 @@ export default function ModuleListPage() {
   useEffect(() => {
     const fetchModules = async () => {
       try {
-        const response = await axiosInstance.get<Module[]>(
+        const response = await api.get<Module[]>(
           `/tutor/courses/${id}/modules`
         );
         setModules(response.data);

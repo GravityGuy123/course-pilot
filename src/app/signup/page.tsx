@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FaGoogle } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { axiosInstance } from "@/lib/axios.config";
+import { authApi } from "@/lib/axios.config";
 import { registerFormSchema, RegisterSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -43,7 +43,7 @@ export default function SignupPage() {
       ) as HTMLInputElement)?.files?.[0];
       if (avatarInput) formData.append("avatar", avatarInput);
 
-      await axiosInstance.post("/register", formData, {
+      await authApi.post("/auth/register/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -73,8 +73,8 @@ export default function UpdateCoursePage() {
     const fetchData = async () => {
       try {
         const [courseRes, categoryRes] = await Promise.all([
-          axiosInstance.get<CoursePageDetails>(`/courses/${courseId}`),
-          axiosInstance.get<{ id: string; name: string }[]>(
+          api.get<CoursePageDetails>(`/courses/${courseId}`),
+          api.get<{ id: string; name: string }[]>(
             "/courses/categories"
           ),
         ]);
@@ -163,7 +163,7 @@ export default function UpdateCoursePage() {
         formData.append("image", data.image);
       }
 
-      await axiosInstance.patch(
+      await api.patch(
         `/tutor/course/${courseId}/update/`,
         formData,
         {

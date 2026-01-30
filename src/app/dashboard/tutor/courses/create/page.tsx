@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { axiosInstance } from "@/lib/axios.config";
+import { api, bootstrapCsrf } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +18,9 @@ export default function CreateCoursePage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  );
   const [preview, setPreview] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -38,17 +40,35 @@ export default function CreateCoursePage() {
 
   // Fetch categories dynamically
   useEffect(() => {
+    let alive = true;
+
     const fetchCategories = async () => {
       try {
-        const res = await axiosInstance.get("/courses/categories");
-        setCategories(res.data);
+        await bootstrapCsrf();
+        const res = await api.get<{ id: string; name: string }[]>(
+          "/courses/categories/"
+        );
+        if (alive) setCategories(res.data);
       } catch (error) {
         console.error("Failed to fetch categories:", error);
       }
     };
+
     fetchCategories();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
+  // Cleanup preview object URL
+  useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  // ✅ keep your original regex logic
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
     const selectionStart = input.selectionStart ?? 0;
@@ -74,6 +94,8 @@ export default function CreateCoursePage() {
     try {
       setFormError(null);
 
+      await bootstrapCsrf();
+
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
@@ -84,41 +106,33 @@ export default function CreateCoursePage() {
         formData.append("duration", data.duration);
       }
 
-      // ✅ Convert price here (NO ZOD TRANSFORM)
+      // ✅ Convert price here (NO ZOD TRANSFORM) - keep regex
       const numericPrice = Number(data.price.replace(/,/g, ""));
       formData.append("price", String(numericPrice));
 
       formData.append("image", data.image);
 
-      const res = await axiosInstance.post(
-        "/tutor/courses/create",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // ✅ backend route (from your refactor)
+      const res = await api.post("/courses/tutor/create/", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       const courseId = res.data?.id as string | undefined;
       if (courseId) {
-        // router.push(`/dashboard/tutor/courses/${courseId}`);
-        SuccessToast("Course created successfully 🎉", isDark, {position: "top-right"})
-      
-        // optional slight delay so toast is visible
+        SuccessToast("Course created successfully 🎉", isDark, {
+          position: "top-right",
+        });
+
         setTimeout(() => {
           router.push(`/dashboard/tutor/courses/${courseId}`);
         }, 800);
       }
-
-          
     } catch (error) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error
-      ) {
-        const response = (error as { response?: { data?: Record<string, unknown> } }).response;
+      if (typeof error === "object" && error !== null && "response" in error) {
+        const response = (error as { response?: { data?: Record<string, unknown> } })
+          .response;
 
         if (response?.data && typeof response.data === "object") {
           setFormError("Failed to create course. Check highlighted fields.");
@@ -179,9 +193,7 @@ export default function CreateCoursePage() {
             className="w-full p-2 border rounded-md"
           />
           {errors.description && (
-            <p className="text-sm text-red-500">
-              {errors.description.message}
-            </p>
+            <p className="text-sm text-red-500">{errors.description.message}</p>
           )}
         </div>
 
@@ -190,7 +202,8 @@ export default function CreateCoursePage() {
           <label className="block mb-1 font-medium">Category *</label>
           <select
             {...register("category_id")}
-            className="w-full p-3 border rounded-lg shadow-sm border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:ring-violet-400 dark:focus:border-violet-400 transition-colors duration-200" >
+            className="w-full p-3 border rounded-lg shadow-sm border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:ring-violet-400 dark:focus:border-violet-400 transition-colors duration-200"
+          >
             <option value="" disabled>
               Select category
             </option>
@@ -201,9 +214,7 @@ export default function CreateCoursePage() {
             ))}
           </select>
           {errors.category_id && (
-            <p className="text-sm text-red-500">
-              {errors.category_id.message}
-            </p>
+            <p className="text-sm text-red-500">{errors.category_id.message}</p>
           )}
         </div>
 
@@ -212,7 +223,8 @@ export default function CreateCoursePage() {
           <label className="block mb-1 font-medium">Level *</label>
           <select
             {...register("level")}
-            className="w-full p-3 border rounded-lg shadow-sm border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:ring-violet-400 dark:focus:border-violet-400 transition-colors duration-200" >
+            className="w-full p-3 border rounded-lg shadow-sm border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:focus:ring-violet-400 dark:focus:border-violet-400 transition-colors duration-200"
+          >
             <option value="">Select level</option>
             {LEVELS.map((level) => (
               <option key={level} value={level}>
@@ -257,8 +269,12 @@ export default function CreateCoursePage() {
             <label className="block mb-2 font-medium">Course Image *</label>
             <label
               htmlFor="course-image"
-              className="text-violet-600 dark:text-indigo-500 cursor-pointer hover:underline"> Select Image </label>
+              className="text-violet-600 dark:text-indigo-500 cursor-pointer hover:underline"
+            >
+              Select Image
+            </label>
           </div>
+
           <input
             id="course-image"
             type="file"
@@ -268,13 +284,16 @@ export default function CreateCoursePage() {
               const file = e.target.files?.[0];
               if (file) {
                 setValue("image", file, { shouldValidate: true });
+                if (preview) URL.revokeObjectURL(preview);
                 setPreview(URL.createObjectURL(file));
               }
             }}
           />
+
           {errors.image && (
             <p className="text-sm text-red-500">{errors.image.message}</p>
           )}
+
           {preview && (
             <div className="relative h-40 w-full mt-3">
               <Image
@@ -288,7 +307,11 @@ export default function CreateCoursePage() {
           )}
         </div>
 
-        <Button type="submit" disabled={isSubmitting} className="w-full text-white bg-violet-600 hover:bg-violet-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-sm transition-all duration-300">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full text-white bg-violet-600 hover:bg-violet-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-sm transition-all duration-300"
+        >
           {isSubmitting ? "Creating..." : "Create Course"}
         </Button>
       </form>

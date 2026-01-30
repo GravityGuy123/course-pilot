@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import AdminStatCard from "./AdminStatCard";
 import AdminAnalyticsChart, { AnalyticsRow } from "./AdminAnalyticsChart";
 import { Users, BookOpen, UserCheck, TrendingUp, FileText } from "lucide-react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 
 export interface Stats {
   totalUsers: number;
@@ -35,11 +35,11 @@ export default function AdminOverviewTab({ analyticsRows: parentRows }: AdminOve
     const fetchStatsAndAnalytics = async () => {
       try {
         setLoading(true);
-        const statsRes = await axiosInstance.get<Stats>("/admin/overview-stats");
+        const statsRes = await api.get<Stats>("/admin/overview-stats");
         setStats(statsRes.data);
 
         if (!parentRows) {
-          const analyticsRes = await axiosInstance.get<AnalyticsRow[]>("/admin/analytics/site");
+          const analyticsRes = await api.get<AnalyticsRow[]>("/admin/analytics/site");
           setAnalyticsRows(analyticsRes.data);
         }
       } catch (err) {

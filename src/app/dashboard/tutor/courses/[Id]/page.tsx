@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { CourseComponent } from "@/components/courses/CourseComponent";
-import { axiosInstance } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { CoursePageDetails } from "@/lib/types";
 
 export default function TutorCourseDetailsPage() {
@@ -22,7 +22,7 @@ export default function TutorCourseDetailsPage() {
       setError(null);
 
       try {
-        const res = await axiosInstance.get<CoursePageDetails>(
+        const res = await api.get<CoursePageDetails>(
           `/courses/${id}`
         );
         setCourse(res.data);

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import AdminStatusBadge from "./AdminStatusBadge";
 import { FileText, CheckCircle, XCircle, Download, Search } from "lucide-react";
-import { axiosInstance } from "@/lib/axios.config";
+import { api, bootstrapCsrf } from "@/lib/axios.config";
 import UserAvatar from "@/components/shared/UserAvatar";
 
 interface UserInfo {
@@ -34,30 +34,44 @@ export default function AdminApplicationsTab() {
     useState<"all" | "pending" | "approved" | "rejected">("all");
 
   useEffect(() => {
+    let alive = true;
+
     const fetchApplications = async () => {
       try {
         setLoading(true);
-        const response = await axiosInstance.get<Application[]>("/applications");
-        setApps(response.data);
+        await bootstrapCsrf(); // safe for POST later
+        const response = await api.get<Application[]>("/admin/applications/");
+        if (alive) setApps(response.data);
       } catch (err) {
         console.error("Failed to fetch applications:", err);
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
+
     fetchApplications();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  const handleApplicationAction = async (id: string, action: "approve" | "reject") => {
+  const handleApplicationAction = async (
+    id: string,
+    action: "approve" | "reject"
+  ) => {
     try {
-      await axiosInstance.post(`/applications/${id}/review`, { action });
+      await bootstrapCsrf();
+      await api.post(`/admin/applications/${id}/review/`, { action });
+
       setApps((prev) =>
         prev.map((app) =>
           app.id === id
             ? {
                 ...app,
                 status: action === "approve" ? "approved" : "rejected",
-                approved_at: action === "approve" ? new Date().toISOString() : undefined,
+                approved_at:
+                  action === "approve" ? new Date().toISOString() : undefined,
               }
             : app
         )
@@ -68,8 +82,7 @@ export default function AdminApplicationsTab() {
   };
 
   const filteredApps = apps.filter((app) => {
-    const searchTarget =
-      app.applicant.email + app.applicant.full_name + app.role;
+    const searchTarget = app.applicant.email + app.applicant.full_name + app.role;
     return (
       (searchTerm === "" ||
         searchTarget.toLowerCase().includes(searchTerm.toLowerCase())) &&
@@ -78,7 +91,11 @@ export default function AdminApplicationsTab() {
   });
 
   if (loading) {
-    return <p className="text-gray-500 dark:text-gray-400">Loading applications...</p>;
+    return (
+      <p className="text-gray-500 dark:text-gray-400">
+        Loading applications...
+      </p>
+    );
   }
 
   return (
@@ -108,7 +125,9 @@ export default function AdminApplicationsTab() {
           aria-label="Filter by status"
           value={filterStatus}
           onChange={(e) =>
-            setFilterStatus(e.target.value as "all" | "pending" | "approved" | "rejected")
+            setFilterStatus(
+              e.target.value as "all" | "pending" | "approved" | "rejected"
+            )
           }
           className="px-4 py-2 border rounded-lg"
         >
@@ -131,7 +150,6 @@ export default function AdminApplicationsTab() {
               key={app.id}
               className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 flex flex-col lg:flex-row lg:items-start gap-6"
             >
-              {/* Left content */}
               <div className="flex-1 space-y-2">
                 <h3 className="text-lg font-semibold flex items-center gap-3 capitalize">
                   {app.role} Application <AdminStatusBadge status={app.status} />
@@ -149,19 +167,11 @@ export default function AdminApplicationsTab() {
                 )}
               </div>
 
-              {/* Improved Action Buttons */}
               {app.status === "pending" && (
                 <div className="flex sm:flex-row lg:flex-col gap-3 lg:w-48 mt-4 lg:mt-0">
                   <button
                     onClick={() => handleApplicationAction(app.id, "approve")}
-                    className="
-                      w-full flex items-center justify-center gap-2
-                      px-6 py-3 text-sm font-semibold
-                      bg-green-600 hover:bg-green-700
-                      text-white rounded-xl
-                      shadow-sm hover:shadow-md
-                      focus:ring-2 focus:ring-green-500
-                    "
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold bg-green-600 hover:bg-green-700 text-white rounded-xl shadow-sm hover:shadow-md focus:ring-2 focus:ring-green-500"
                   >
                     <CheckCircle className="w-5 h-5" />
                     Approve
@@ -169,14 +179,7 @@ export default function AdminApplicationsTab() {
 
                   <button
                     onClick={() => handleApplicationAction(app.id, "reject")}
-                    className="
-                      w-full flex items-center justify-center gap-2
-                      px-6 py-3 text-sm font-semibold
-                      border border-red-500 text-red-600
-                      hover:bg-red-50 dark:hover:bg-red-900/20
-                      rounded-xl
-                      focus:ring-2 focus:ring-red-500
-                    "
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold border border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl focus:ring-2 focus:ring-red-500"
                   >
                     <XCircle className="w-5 h-5" />
                     Reject

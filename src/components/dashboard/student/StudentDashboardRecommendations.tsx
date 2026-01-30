@@ -7,9 +7,30 @@ import { ChevronRight, PlayCircle } from "lucide-react";
 import { RecommendedCourse } from "@/lib/types";
 
 const mockRecommendedCourses: RecommendedCourse[] = [
-  { id: 4, title: "Advanced TypeScript Patterns", category: "Web Development", duration: "6h 00m", rating: 4.8, tutor: { full_name: "Mike Chen" } },
-  { id: 5, title: "Node.js Backend Development", category: "Backend", duration: "15h 00m", rating: 4.7, tutor: { full_name: "Alex Rivera" } },
-  { id: 6, title: "Machine Learning Basics", category: "AI/ML", duration: "20h 00m", rating: 4.9, tutor: { full_name: "Dr. Lisa Wang" } },
+  {
+    id: 4,
+    title: "Advanced TypeScript Patterns",
+    category: "Web Development",
+    duration: "6h 00m",
+    rating: 4.8,
+    tutor: { full_name: "Mike Chen" },
+  },
+  {
+    id: 5,
+    title: "Node.js Backend Development",
+    category: "Backend",
+    duration: "15h 00m",
+    rating: 4.7,
+    tutor: { full_name: "Alex Rivera" },
+  },
+  {
+    id: 6,
+    title: "Machine Learning Basics",
+    category: "AI/ML",
+    duration: "20h 00m",
+    rating: 4.9,
+    tutor: { full_name: "Dr. Lisa Wang" },
+  },
 ];
 
 export default function StudentDashboardRecommendations() {
@@ -33,7 +54,10 @@ export default function StudentDashboardRecommendations() {
         {mockRecommendedCourses.map((course, idx) => {
           // Gradient palette for icon and card glow
           const gradients = [
-            { icon: "from-indigo-500 to-purple-500", glow: "shadow-indigo-200/50" },
+            {
+              icon: "from-indigo-500 to-purple-500",
+              glow: "shadow-indigo-200/50",
+            },
             { icon: "from-pink-500 to-red-500", glow: "shadow-pink-200/50" },
             { icon: "from-teal-400 to-blue-500", glow: "shadow-teal-200/50" },
           ];
@@ -54,7 +78,7 @@ export default function StudentDashboardRecommendations() {
               <div className="flex items-center gap-4 sm:gap-5 flex-1">
                 <div
                   className={`
-                    flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14
+                    shrink-0 w-12 h-12 sm:w-14 sm:h-14
                     rounded-full p-3
                     bg-gradient-to-tr ${gradient.icon}
                     flex items-center justify-center

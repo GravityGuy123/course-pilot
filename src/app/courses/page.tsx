@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { axiosInstance, baseUrl } from "@/lib/axios.config";
+import { api, authApi } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { Clock, Users } from "lucide-react";
 
@@ -31,6 +31,8 @@ interface CurrentUser {
   is_tutor: boolean;
 }
 
+const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
+
 export default function PublicCoursesPage() {
   const router = useRouter();
   const [courses, setCourses] = useState<PublicCourse[]>([]);
@@ -38,36 +40,50 @@ export default function PublicCoursesPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
-  const MEDIA_BASE = baseUrl.replace("/api", "");
-
-  // Fetch current user
   useEffect(() => {
+    let alive = true;
+
     const fetchCurrentUser = async () => {
       try {
-        const res = await axiosInstance.get<CurrentUser>("/auth/me");
-        setCurrentUser(res.data);
+        const res = await authApi.get<CurrentUser>("/current-user/");
+        if (alive) setCurrentUser(res.data);
       } catch {
-        setCurrentUser(null);
+        if (alive) setCurrentUser(null);
       }
     };
+
     fetchCurrentUser();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
-  // Fetch all courses
   useEffect(() => {
+    let alive = true;
+
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get<PublicCourse[]>("/courses");
-        setCourses(res.data.filter((c) => !c.is_deleted)); // show only non-deleted courses
-        setError(null);
+        const res = await api.get<PublicCourse[]>("/courses/");
+        const filtered = res.data.filter((c) => !c.is_deleted);
+
+        if (alive) {
+          setCourses(filtered);
+          setError(null);
+        }
       } catch {
-        setError("Failed to load courses.");
+        if (alive) setError("Failed to load courses.");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     };
+
     fetchCourses();
+
+    return () => {
+      alive = false;
+    };
   }, []);
 
   if (loading) return <p className="text-center mt-10">Loading courses...</p>;
@@ -76,27 +92,23 @@ export default function PublicCoursesPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      {/* ENGAGING HEADER */}
       <h1 className="text-3xl md:text-4xl font-bold mb-12 text-center animate-slide-fade">
         📖 Browse Our Extensive Course Library – Unlock Your Learning Potential!
       </h1>
 
-      {/* COURSES GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {courses.map((course) => {
-          const imageUrl =
-            course.image?.startsWith("http")
-              ? course.image
-              : course.image
-              ? `${MEDIA_BASE}${course.image}`
-              : null;
+          const imageUrl = course.image?.startsWith("http")
+            ? course.image
+            : course.image
+            ? `${SERVER_URL}${course.image}`
+            : null;
 
           return (
             <div
               key={course.id}
               className="border rounded-lg overflow-hidden shadow hover:shadow-lg transition"
             >
-              {/* IMAGE + CATEGORY BADGE */}
               {imageUrl && (
                 <div className="relative h-44 w-full">
                   <Image
@@ -115,28 +127,24 @@ export default function PublicCoursesPage() {
               )}
 
               <div className="p-4 space-y-2">
-                {/* LEVEL */}
                 <span className="inline-block text-xs text-violet-700 bg-violet-100 px-2 py-0.5 rounded-full">
                   {course.level}
                 </span>
 
                 <h2 className="text-lg font-semibold">{course.title}</h2>
 
-                {/* TUTOR */}
                 {course.tutor && (
                   <p className="text-xs text-gray-500">
                     By <span className="font-medium">{course.tutor.full_name}</span>
                   </p>
                 )}
 
-                {/* DESCRIPTION */}
                 {course.description && (
                   <p className="text-sm text-gray-600">
                     {course.description.slice(0, 100)}...
                   </p>
                 )}
 
-                {/* META */}
                 <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600">
                   {course.duration && (
                     <div className="flex items-center gap-1">
@@ -152,7 +160,6 @@ export default function PublicCoursesPage() {
                     </div>
                   )}
 
-                  {/* STATUS BADGE */}
                   {course.is_active !== undefined && (
                     <span
                       className={`px-2 py-0.5 text-xs rounded-full ${
@@ -170,7 +177,6 @@ export default function PublicCoursesPage() {
                   ₦{Number(course.price).toLocaleString()}
                 </p>
 
-                {/* ACTIONS */}
                 <div className="flex gap-3 mt-3 flex-wrap">
                   <Button
                     onClick={() => router.push(`/courses/${course.id}`)}
@@ -193,7 +199,6 @@ export default function PublicCoursesPage() {
         })}
       </div>
 
-      {/* ANIMATION STYLES */}
       <style jsx>{`
         @keyframes slideFade {
           0% {

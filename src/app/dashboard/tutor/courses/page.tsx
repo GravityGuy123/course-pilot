@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { axiosInstance, baseUrl } from "@/lib/axios.config";
+import { api } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AllCoursesPageProps } from "@/lib/types";
 import { Clock, Users } from "lucide-react";
 
-const MEDIA_BASE = baseUrl.replace("/api", "");
+const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 export default function TutorCoursesPage() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export default function TutorCoursesPage() {
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/tutor/courses");
+        const res = await api.get("/tutor/courses");
         // Only include non-deleted courses
         setCourses(res.data.filter((c: AllCoursesPageProps) => !c.is_deleted));
       } catch {
@@ -59,7 +59,7 @@ export default function TutorCoursesPage() {
             course.image?.startsWith("http")
               ? course.image
               : course.image
-              ? `${MEDIA_BASE}${course.image}`
+              ? `${SERVER_URL}${course.image}`
               : null;
 
           return (
