@@ -1,11 +1,20 @@
 import axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-/**
- * Base server URL (no /api at the end)
- * Example: http://localhost:8000
- */
-const SERVER_URL =
-  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
+
+function normalizeServerUrl(raw: string) {
+  let url = (raw || "http://localhost:8000").trim();
+
+  // remove trailing slash
+  if (url.endsWith("/")) url = url.slice(0, -1);
+
+  // remove trailing "/api" if present
+  if (url.endsWith("/api")) url = url.slice(0, -4);
+
+  return url;
+}
+
+const SERVER_URL = normalizeServerUrl(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000");
+
 
 /**
  * General API client: /api/*
@@ -37,8 +46,6 @@ function getCookie(name: string): string | null {
 
   return match ? decodeURIComponent(match[1]) : null;
 }
-
-
 
 // ---------------- CSRF request interceptor (shared) ----------------
 function attachCsrfInterceptor(client: typeof api) {
@@ -74,10 +81,7 @@ function processQueue(error: AxiosError | null) {
   failedQueue = [];
 }
 
-/**
- * Refresh + retry interceptor ONLY on authApi.
- * NOTE: your refresh endpoint is /api/auth/refresh/ in your Django setup.
- */
+/* Refresh + retry interceptor ONLY on authApi. */
 authApi.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
