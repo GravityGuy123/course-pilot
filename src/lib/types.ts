@@ -401,3 +401,61 @@ export interface CourseModule {
   order: number;
   is_published: boolean;
 }
+
+export interface PublicCourse {
+  id: string;
+  title: string;
+  description?: string;
+  level: string;
+  price: number;
+  duration?: string;
+  image?: string | null;
+  student_count?: number;
+  category: string;
+  tutor?: {
+    id: string;
+    full_name: string;
+    username: string;
+  };
+  is_deleted?: boolean;
+  is_active?: boolean;
+  pricing_type?: "FREE" | "PAID";
+  currency?: string;
+}
+
+export interface CurrentUser {
+  id: string;
+  is_tutor: boolean;
+}
+
+
+export interface TutorInfo {
+  id: string;
+  full_name: string;
+  username: string;
+}
+
+export interface CourseDetails {
+  id: string;
+  title: string;
+  description?: string;
+  level?: string;
+  duration?: string;
+  price: number;
+  image?: string | null;
+  student_count?: number;
+  category?: string | null;
+  tutor?: TutorInfo | null;
+  pricing_type?: "FREE" | "PAID";
+  currency?: string;
+}
+
+export type PaymentRequiredPayload = {
+  detail: string;
+  enrollment_id: string;
+  course_id: string;
+  pricing_type: "PAID";
+  currency: string;
+  amount_due: number;
+  next_action: "INITIATE_PAYMENT";
+};

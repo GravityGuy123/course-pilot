@@ -7,9 +7,10 @@ import axios, {
 } from "axios";
 
 
-export interface ApiError {
+export interface ApiError<T = unknown> {
   status: number; // 0 = network/unknown
   message: string;
+  data?: T;
   raw?: unknown; // optional: keep original payload for debugging
 }
 

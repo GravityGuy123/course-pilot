@@ -26,25 +26,22 @@ function TutorCoursesPage() {
       setUiState("loading");
       setErrorMsg("");
 
-      const res = await api.get<AllCoursesPageProps[]>("/tutor/courses");
+      // ✅ CONSISTENT with your other tutor endpoints: /courses/tutor/...
+      const res = await api.get<AllCoursesPageProps[]>("/courses/tutor/");
 
       const list = Array.isArray(res.data) ? res.data : [];
       const filtered = list.filter((c) => !c.is_deleted);
 
       setCourses(filtered);
-
-      if (filtered.length === 0) setUiState("empty");
-      else setUiState("ready");
+      setUiState(filtered.length === 0 ? "empty" : "ready");
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        // Treat 404 as empty state if your backend uses it for "no tutor courses"
         if (err.response?.status === 404) {
           setCourses([]);
           setUiState("empty");
           return;
         }
 
-        // network / CORS / server unreachable
         if (!err.response) {
           setErrorMsg("Network error. Check your internet connection and try again.");
           setUiState("error");
@@ -58,29 +55,18 @@ function TutorCoursesPage() {
   }, []);
 
   useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      if (!alive) return;
-      await fetchCourses();
-    })();
-
-    return () => {
-      alive = false;
-    };
+    void fetchCourses();
   }, [fetchCourses]);
 
   const courseCountLabel = useMemo(() => {
     const n = courses.length;
-    if (n === 1) return "Awesome Course!";
-    return "Awesome Courses!";
+    return n === 1 ? "Awesome Course!" : "Awesome Courses!";
   }, [courses.length]);
 
   const handleViewCourse = (courseId: string) => {
     router.push(`/dashboard/tutor/courses/${courseId}`);
   };
 
-  // ------------------- UI States -------------------
   if (uiState === "loading") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10">
@@ -111,9 +97,7 @@ function TutorCoursesPage() {
           <RefreshCcw className="h-6 w-6" />
         </div>
 
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          Couldn’t load your courses
-        </h2>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Couldn’t load your courses</h2>
 
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           {errorMsg || "Something went wrong. Please try again."}
@@ -138,19 +122,15 @@ function TutorCoursesPage() {
           <BookOpen className="h-6 w-6" />
         </div>
 
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          You haven’t created any courses yet
-        </h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">You haven’t created any courses yet</h2>
 
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          Create your first course and start teaching today.
-        </p>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Create your first course and start teaching today.</p>
 
         <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
           <Button onClick={fetchCourses} className="bg-violet-600 hover:bg-violet-700 text-white">
             Refresh
           </Button>
-          <Button variant="outline" onClick={() => router.push("/dashboard/tutor/courses/new")}>
+          <Button variant="outline" onClick={() => router.push("/dashboard/tutor/courses/create")}>
             Create a course
           </Button>
         </div>
@@ -169,7 +149,6 @@ function TutorCoursesPage() {
     );
   }
 
-  // ------------------- Ready -------------------
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
       <h1 className="text-xl sm:text-2xl font-bold mb-8 flex flex-wrap items-center justify-center sm:justify-start gap-3">
@@ -198,13 +177,7 @@ function TutorCoursesPage() {
             >
               {imageUrl ? (
                 <div className="relative h-44 w-full">
-                  <Image
-                    src={imageUrl}
-                    alt={course.title}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+                  <Image src={imageUrl} alt={course.title} fill className="object-cover" unoptimized />
                   {course.category && (
                     <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-lg z-10">
                       {course.category}
@@ -228,20 +201,10 @@ function TutorCoursesPage() {
                   {course.title}
                 </h2>
 
-                {course.tutor?.full_name && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    By <span className="font-medium">{course.tutor.full_name}</span>
-                  </p>
-                )}
-
                 {description ? (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                    {description}
-                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">{description}</p>
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                    No description added yet.
-                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">No description added yet.</p>
                 )}
 
                 <div className="flex flex-wrap items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -264,9 +227,7 @@ function TutorCoursesPage() {
                   {course.student_count !== undefined && (
                     <span
                       className={`px-2 py-0.5 text-xs rounded-full ${
-                        course.student_count > 0
-                          ? "bg-green-200 text-green-800"
-                          : "bg-red-200 text-red-800"
+                        course.student_count > 0 ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"
                       }`}
                     >
                       {course.student_count > 0 ? "Active" : "Inactive"}
@@ -288,10 +249,10 @@ function TutorCoursesPage() {
 
                   <Button
                     variant="outline"
-                    onClick={() => router.push(`/dashboard/tutor/courses/${course.id}/enroll`)}
+                    onClick={() => router.push(`/dashboard/tutor/courses/${course.id}/edit`)}
                     className="w-full"
                   >
-                    Enroll
+                    Edit
                   </Button>
                 </div>
               </div>
@@ -313,7 +274,6 @@ function TutorCoursesPage() {
     </div>
   );
 }
-
 
 export default function TutorCoursesPageContent() {
   return (

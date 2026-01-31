@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Image from "next/image";
-import { api } from "@/lib/axios.config";
+import { api, bootstrapCsrf } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,7 +17,6 @@ import { SuccessToast } from "@/lib/toast";
 import { useTheme } from "next-themes";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-/* ---------------- CONSTANTS ---------------- */
 
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
 type Level = (typeof LEVELS)[number];
@@ -31,7 +30,6 @@ const updateCourseSchema = createCourseSchema.partial({
 
 type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
 
-/* ---------------- PAGE ---------------- */
 
 function UpdateCoursePage() {
   const router = useRouter();
@@ -66,7 +64,6 @@ function UpdateCoursePage() {
 
   const watchedPrice = watch("price") ?? "";
 
-  /* ---------------- FETCH DATA ---------------- */
 
   useEffect(() => {
     if (!courseId || !user) return;
@@ -74,11 +71,12 @@ function UpdateCoursePage() {
     const fetchData = async () => {
       try {
         const [courseRes, categoryRes] = await Promise.all([
-          api.get<CoursePageDetails>(`/courses/${courseId}`),
-          api.get<{ id: string; name: string }[]>(
-            "/courses/categories"
-          ),
+          api.get<CoursePageDetails>(`/courses/${courseId}/`),
+          api.get<{ id: string; name: string }[]>("/courses/categories/"),
         ]);
+
+        // in onSubmit BEFORE patch:
+        await bootstrapCsrf();
 
         if (
           String(user.id) !==
@@ -117,7 +115,6 @@ function UpdateCoursePage() {
     fetchData();
   }, [courseId, user, router, setValue]);
 
-  /* ---------------- PRICE FORMAT ---------------- */
 
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target;
@@ -139,7 +136,6 @@ function UpdateCoursePage() {
     });
   };
 
-  /* ---------------- SUBMIT ---------------- */
 
   const onSubmit = async (data: UpdateCourseInput) => {
     if (!courseId) return;

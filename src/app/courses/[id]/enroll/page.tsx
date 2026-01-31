@@ -1,4 +1,3 @@
-// src/app/courses/[id]/enroll/page.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -13,28 +12,12 @@ import {
   ShieldCheck,
   AlertTriangle,
   RefreshCcw,
+  CreditCard,
 } from "lucide-react";
+import { CourseDetails, PaymentRequiredPayload } from "@/lib/types";
 
 type UiState = "loading" | "ready" | "error";
 
-interface TutorInfo {
-  id: string;
-  full_name: string;
-  username: string;
-}
-
-interface CourseDetails {
-  id: string;
-  title: string;
-  description?: string;
-  level?: string;
-  duration?: string;
-  price: number;
-  image?: string | null;
-  student_count?: number;
-  category?: string | null;
-  tutor?: TutorInfo | null;
-}
 
 function trimTrailingSlash(url: string) {
   if (!url) return url;
@@ -44,7 +27,7 @@ function trimTrailingSlash(url: string) {
 function resolveMediaUrl(baseUrl: string, maybePath?: string | null) {
   if (!maybePath) return null;
   if (maybePath.startsWith("http")) return maybePath;
-  
+
   const cleanBase = trimTrailingSlash(baseUrl);
   const needsSlash = !maybePath.startsWith("/");
   return `${cleanBase}${needsSlash ? "/" : ""}${maybePath}`;
@@ -55,8 +38,8 @@ export default function EnrollPage() {
   const params = useParams<{ id: string }>();
   const courseId = params?.id;
 
-  const SERVER_URL = useMemo(() => trimTrailingSlash(
-    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"),
+  const SERVER_URL = useMemo(
+    () => trimTrailingSlash(process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"),
     []
   );
 
@@ -66,8 +49,11 @@ export default function EnrollPage() {
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // NEW: payment required state
+  const [paymentRequired, setPaymentRequired] = useState<PaymentRequiredPayload | null>(null);
+
   // ----------------------------
-  // Code block: FETCH COURSE DETAILS (uses api)
+  // FETCH COURSE DETAILS (uses api)
   // ----------------------------
   const fetchCourse = useCallback(async () => {
     if (!courseId) return;
@@ -75,6 +61,7 @@ export default function EnrollPage() {
     setUiState("loading");
     setErrorMsg("");
     setSuccessMsg("");
+    setPaymentRequired(null);
 
     try {
       const res = await api.get<CourseDetails>(`/courses/${courseId}/`);
@@ -83,7 +70,6 @@ export default function EnrollPage() {
     } catch (err) {
       const apiErr = toApiError(err);
 
-      // Optional: tailor a friendlier message for some statuses
       if (apiErr.status === 404) {
         setErrorMsg("This course does not exist or is no longer available.");
       } else if (apiErr.status === 403) {
@@ -101,7 +87,7 @@ export default function EnrollPage() {
   }, [fetchCourse]);
 
   // ----------------------------
-  // Code block: ENROLL ACTION (uses authApi)
+  // ENROLL ACTION (uses authApi)
   // ----------------------------
   const handleEnroll = useCallback(async () => {
     if (!courseId) return;
@@ -109,39 +95,51 @@ export default function EnrollPage() {
     setIsSubmitting(true);
     setErrorMsg("");
     setSuccessMsg("");
+    setPaymentRequired(null);
 
     try {
-      // Keep this if your backend expects CSRF endpoint to be hit before unsafe methods
       await authApi.get("/csrf/");
 
-      // POST enroll
-      await authApi.post(`/courses/${courseId}/enroll/`, {});
+      const res = await authApi.post(`/courses/${courseId}/enroll/`, {});
 
+      // FREE course: enrollment created (201)
       setSuccessMsg("Enrollment successful! Redirecting…");
-
       window.setTimeout(() => {
         router.push(`/courses/${courseId}`);
       }, 700);
+
+      return res;
     } catch (err) {
       const apiErr = toApiError(err);
 
-      // if not logged in, go login
       if (apiErr.status === 401) {
-        router.push(`/auth/login?next=/courses/${courseId}/enroll`);
+        router.push(`/login?next=/courses/${courseId}/enroll`);
         return;
       }
 
-      // For “already enrolled” your backend likely returns 400 with detail/message
-      // toApiError already extracts that cleanly.
+      // IMPORTANT: PAID course flow from your backend
+      if (apiErr.status === 402) {
+        const data = (apiErr.data || {}) as Partial<PaymentRequiredPayload>;
+
+        setPaymentRequired({
+          detail: data.detail || "Payment required to enroll in this course.",
+          enrollment_id: data.enrollment_id || "",
+          course_id: data.course_id || courseId,
+          pricing_type: "PAID",
+          currency: data.currency || "NGN",
+          amount_due: typeof data.amount_due === "number" ? data.amount_due : Number(course?.price || 0),
+          next_action: "INITIATE_PAYMENT",
+        });
+
+        return;
+      }
+
       setErrorMsg(apiErr.message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [courseId, router]);
+  }, [courseId, router, course?.price]);
 
-  // ----------------------------
-  // Code block: LOADING UI
-  // ----------------------------
   if (uiState === "loading") {
     return (
       <div className="max-w-6xl mx-auto px-4 py-10">
@@ -169,9 +167,6 @@ export default function EnrollPage() {
     );
   }
 
-  // ----------------------------
-  // Code block: ERROR UI
-  // ----------------------------
   if (uiState === "error") {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
@@ -188,10 +183,7 @@ export default function EnrollPage() {
         </p>
 
         <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-          <Button
-            onClick={fetchCourse}
-            className="bg-violet-600 hover:bg-violet-700 text-white"
-          >
+          <Button onClick={fetchCourse} className="bg-violet-600 hover:bg-violet-700 text-white">
             <RefreshCcw className="h-4 w-4 mr-2" />
             Retry
           </Button>
@@ -204,12 +196,11 @@ export default function EnrollPage() {
     );
   }
 
-  // uiState === "ready"
   const imageUrl = resolveMediaUrl(SERVER_URL, course?.image);
+  const isPaid = course?.pricing_type === "PAID";
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">
-      {/* Code block: HEADER */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 rounded-full bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200 px-3 py-1 text-xs font-semibold">
           <ShieldCheck className="h-4 w-4" />
@@ -225,9 +216,7 @@ export default function EnrollPage() {
         </p>
       </div>
 
-      {/* Code block: MAIN LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Left: course preview */}
         <div className="lg:col-span-3 border rounded-2xl overflow-hidden bg-white dark:bg-gray-900 shadow-sm">
           <div className="relative h-64 w-full bg-gray-100 dark:bg-gray-800">
             {imageUrl ? (
@@ -249,6 +238,10 @@ export default function EnrollPage() {
                 {course.category}
               </span>
             ) : null}
+
+            <span className="absolute top-4 right-4 bg-black/70 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+              {isPaid ? "PAID" : "FREE"}
+            </span>
           </div>
 
           <div className="p-5">
@@ -270,15 +263,9 @@ export default function EnrollPage() {
               {course?.title}
             </h2>
 
-            {course?.description ? (
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                {course.description}
-              </p>
-            ) : (
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                No description provided for this course yet.
-              </p>
-            )}
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+              {course?.description || "No description provided for this course yet."}
+            </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-5 text-sm text-gray-600 dark:text-gray-300">
               {course?.duration ? (
@@ -292,8 +279,7 @@ export default function EnrollPage() {
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   <span>
-                    {course.student_count}{" "}
-                    {course.student_count === 1 ? "student" : "students"}
+                    {course.student_count} {course.student_count === 1 ? "student" : "students"}
                   </span>
                 </div>
               ) : null}
@@ -301,26 +287,21 @@ export default function EnrollPage() {
           </div>
         </div>
 
-        {/* Right: checkout/enroll card */}
         <div className="lg:col-span-2 border rounded-2xl bg-white dark:bg-gray-900 shadow-sm p-5 h-fit">
-          {/* Code block: PRICE */}
           <div className="flex items-end justify-between">
             <div>
               <p className="text-xs text-gray-500 dark:text-gray-400">Price</p>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                ₦{Number(course?.price || 0).toLocaleString()}
+                {isPaid ? `₦${Number(course?.price || 0).toLocaleString()}` : "Free"}
               </p>
-            </div>
-
-            <div className="text-right">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Course ID</p>
-              <p className="text-xs font-mono text-gray-700 dark:text-gray-300">
-                {course?.id}
-              </p>
+              {isPaid ? (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Payment required to activate enrollment.
+                </p>
+              ) : null}
             </div>
           </div>
 
-          {/* Code block: ALERTS */}
           {errorMsg ? (
             <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
               {errorMsg}
@@ -333,36 +314,59 @@ export default function EnrollPage() {
             </div>
           ) : null}
 
-          {/* Code block: ACTION BUTTONS */}
+          {/* NEW: Payment required UI */}
+          {paymentRequired ? (
+            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-100">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-amber-200/70 dark:bg-amber-500/20">
+                  <CreditCard className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="font-semibold">Payment Required</p>
+                  <p className="text-sm mt-1">{paymentRequired.detail}</p>
+                  <p className="text-sm mt-2">
+                    Amount due: <span className="font-semibold">₦{Number(paymentRequired.amount_due).toLocaleString()}</span>
+                  </p>
+
+                  <div className="mt-4 grid grid-cols-1 gap-2">
+                    <Button
+                      className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                      onClick={() => {
+                        // Placeholder: route to a payment page when you add it.
+                        // Keep enrollment_id in the URL so payment can attach to it.
+                        router.push(`/dashboard/payments?enrollment_id=${paymentRequired.enrollment_id}`);
+                      }}
+                    >
+                      Proceed to payment
+                    </Button>
+
+                    <Button variant="outline" className="w-full" onClick={() => router.push(`/courses/${courseId}`)}>
+                      Back to course
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="mt-5 space-y-3">
             <Button
               onClick={handleEnroll}
               disabled={isSubmitting}
               className="w-full bg-violet-600 hover:bg-violet-700 text-white"
             >
-              {isSubmitting ? "Enrolling…" : "Enroll now"}
+              {isSubmitting ? "Processing…" : isPaid ? "Start enrollment" : "Enroll now"}
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push(`/courses/${courseId}`)}
-              className="w-full"
-            >
+            <Button variant="outline" onClick={() => router.push(`/courses/${courseId}`)} className="w-full">
               Back to course
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/courses")}
-              className="w-full"
-            >
+            <Button variant="outline" onClick={() => router.push("/courses")} className="w-full">
               Browse other courses
             </Button>
           </div>
 
-          {/* Code block: FOOTER NOTE */}
           <div className="mt-5 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
             By enrolling, you’ll get access to course content based on your account permissions.
             If you’re not logged in, you’ll be redirected to sign in.

@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { useState } from "react";
-import { api } from "@/lib/axios.config";
+import { api, bootstrapCsrf } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
@@ -28,6 +28,7 @@ function DeleteCoursePage() {
     setError("");
 
     try {
+      await bootstrapCsrf();
       await api.delete(
         `/tutor/course/${courseId}/delete/`
       );

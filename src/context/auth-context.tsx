@@ -11,7 +11,7 @@ import React, {
 import { LoginSchema } from "@/lib/schema";
 import { authApi, bootstrapCsrf } from "@/lib/axios.config";
 
-interface User {
+export interface User {
   id: number;
   username: string;
   full_name: string;

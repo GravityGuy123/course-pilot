@@ -49,6 +49,7 @@ function CreateCoursePage() {
         const res = await api.get<{ id: string; name: string }[]>(
           "/courses/categories/"
         );
+        
         if (alive) setCategories(res.data);
       } catch (error) {
         console.error("Failed to fetch categories:", error);

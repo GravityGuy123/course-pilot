@@ -7,34 +7,30 @@ import axios from "axios";
 import { api, authApi } from "@/lib/axios.config";
 import { Button } from "@/components/ui/button";
 import { Clock, Users, BookOpen, RefreshCcw } from "lucide-react";
+import { CurrentUser, PublicCourse } from "@/lib/types";
 
-interface PublicCourse {
-  id: string;
-  title: string;
-  description?: string;
-  level: string;
-  price: number;
-  duration?: string;
-  image?: string | null;
-  student_count?: number;
-  category: string;
-  tutor?: {
-    id: string;
-    full_name: string;
-    username: string;
-  };
-  is_deleted?: boolean;
-  is_active?: boolean;
-}
-
-interface CurrentUser {
-  id: string;
-  is_tutor: boolean;
-}
 
 const SERVER_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/$/, "");
 
 type UiState = "loading" | "ready" | "empty" | "error";
+
+type PaginatedResponse<T> = {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+};
+
+function normalizeCoursesResponse(data: unknown): PublicCourse[] {
+  if (Array.isArray(data)) return data as PublicCourse[];
+
+  if (data && typeof data === "object") {
+    const maybe = data as Partial<PaginatedResponse<PublicCourse>>;
+    if (Array.isArray(maybe.results)) return maybe.results;
+  }
+
+  return [];
+}
 
 export default function PublicCoursesPage() {
   const router = useRouter();
@@ -51,47 +47,37 @@ export default function PublicCoursesPage() {
     const fetchCurrentUser = async () => {
       try {
         const res = await authApi.get<CurrentUser>("/current-user/");
-        if (alive) setCurrentUser(res.data);
+        if (!alive) return;
+        setCurrentUser(res.data);
       } catch {
-        if (alive) setCurrentUser(null);
+        if (!alive) return;
+        setCurrentUser(null);
       }
     };
 
-    fetchCurrentUser();
+    void fetchCurrentUser();
 
     return () => {
       alive = false;
     };
   }, []);
 
-  // -------- Courses fetch (robust) --------
+  // -------- Courses fetch (pagination-safe) --------
   const fetchCourses = useCallback(async () => {
-    let alive = true;
-
     try {
       setUiState("loading");
       setErrorMsg("");
 
-      const res = await api.get<PublicCourse[]>("/courses/");
-      const list = Array.isArray(res.data) ? res.data : [];
+      const res = await api.get("/courses/");
+      const list = normalizeCoursesResponse(res.data);
 
-      // filter out soft-deleted courses
+      // filter out soft-deleted courses (defensive)
       const filtered = list.filter((c) => !c.is_deleted);
 
-      if (!alive) return;
-
       setCourses(filtered);
-
-      if (filtered.length === 0) {
-        setUiState("empty");
-      } else {
-        setUiState("ready");
-      }
+      setUiState(filtered.length === 0 ? "empty" : "ready");
     } catch (err) {
-      if (!alive) return;
-
-      // If backend returns 404 for "no courses", treat it as empty state (user-friendly).
-      // If your API always returns 200 with [], this still works fine.
+      // If backend returns 404 for "no courses", treat it as empty.
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
 
@@ -101,7 +87,6 @@ export default function PublicCoursesPage() {
           return;
         }
 
-        // Network / CORS / server down
         if (!err.response) {
           setErrorMsg("Network error. Check your internet connection and try again.");
           setUiState("error");
@@ -112,22 +97,10 @@ export default function PublicCoursesPage() {
       setErrorMsg("Failed to load courses. Please try again.");
       setUiState("error");
     }
-
-    return () => {
-      alive = false;
-    };
   }, []);
 
   useEffect(() => {
-    let alive = true;
-
-    (async () => {
-      await fetchCourses();
-    })();
-
-    return () => {
-      alive = false;
-    };
+    void fetchCourses();
   }, [fetchCourses]);
 
   const isTutor = useMemo(() => !!currentUser?.is_tutor, [currentUser]);
@@ -205,7 +178,7 @@ export default function PublicCoursesPage() {
           </Button>
 
           {isTutor ? (
-            <Button variant="outline" onClick={() => router.push("/dashboard/tutor/courses/new")}>
+            <Button variant="outline" onClick={() => router.push("/dashboard/tutor/courses/create")}>
               Create a course
             </Button>
           ) : (
@@ -233,6 +206,8 @@ export default function PublicCoursesPage() {
             ? `${SERVER_URL}${course.image}`
             : null;
 
+          const isPaid = course.pricing_type === "PAID";
+
           return (
             <div
               key={course.id}
@@ -240,18 +215,15 @@ export default function PublicCoursesPage() {
             >
               {imageUrl ? (
                 <div className="relative h-44 w-full">
-                  <Image
-                    src={imageUrl}
-                    alt={course.title}
-                    fill
-                    className="object-cover"
-                    unoptimized
-                  />
+                  <Image src={imageUrl} alt={course.title} fill className="object-cover" unoptimized />
                   {course.category && (
                     <span className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full shadow-lg z-10">
                       {course.category}
                     </span>
                   )}
+                  <span className="absolute top-3 right-3 bg-black/70 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    {isPaid ? "PAID" : "FREE"}
+                  </span>
                 </div>
               ) : (
                 <div className="h-44 w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
@@ -296,22 +268,10 @@ export default function PublicCoursesPage() {
                       </span>
                     </div>
                   )}
-
-                  {course.is_active !== undefined && (
-                    <span
-                      className={`px-2 py-0.5 text-xs rounded-full ${
-                        course.is_active
-                          ? "bg-green-200 text-green-800"
-                          : "bg-red-200 text-red-800"
-                      }`}
-                    >
-                      {course.is_active ? "Active" : "Inactive"}
-                    </span>
-                  )}
                 </div>
 
                 <p className="text-sm font-bold mt-2 text-gray-900 dark:text-gray-100">
-                  ₦{Number(course.price).toLocaleString()}
+                  {isPaid ? `₦${Number(course.price).toLocaleString()}` : "Free"}
                 </p>
 
                 <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
