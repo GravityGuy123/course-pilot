@@ -3,6 +3,10 @@ import z from "zod";
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
 
+
+// ----------------------------------------
+// REGISTER SCHEMA
+// ----------------------------------------
 export const registerFormSchema = z
   .object({
     username: z
@@ -74,6 +78,9 @@ export const registerVendorShema = z.object({
 export type RegisterVendorSchema = z.infer<typeof registerVendorShema>;
 
 
+// ----------------------------------------
+// LOGIN SCHEMA
+// ----------------------------------------
 export const loginSchema = z.object({
   identifier: z
     .string()
@@ -91,6 +98,9 @@ export const loginSchema = z.object({
 export type LoginSchema = z.infer<typeof loginSchema>;
 
 
+// ----------------------------------------
+// USER SETTINGS SCHEMA
+// ----------------------------------------
 export const userSettingsSchema = z
   .object({
     username: z
@@ -171,6 +181,9 @@ export const userSettingsSchema = z
 export type UserSettingsSchema = z.infer<typeof userSettingsSchema>;
 
 
+// ----------------------------------------
+// CREATE COURSE SCHEMA
+// ----------------------------------------
 export const createCourseSchema = z.object({
   title: z
     .string()
@@ -223,3 +236,34 @@ export const createCourseSchema = z.object({
 });
 
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;
+
+
+// ----------------------------------------
+// FORGOT PASSWORD SCHEMA
+// ----------------------------------------
+export const forgotPasswordSchema = z.object({
+  email: z.email("Please enter a valid email address").min(8, "Email is too short"),
+});
+
+export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
+
+// -----------------------------------------
+// RESET PASSWORD SCHEMA
+// -----------------------------------------
+export const resetPasswordSchema = z
+  .object({
+    new_password: z
+      .string()
+      .min(8, "Password must be at least 8 characters long")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter (A-Z)")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter (a-z)")
+      .regex(/[0-9]/, "Password must include at least one number (0-9)")
+      .regex(/[^A-Za-z0-9]/, "Password must include at least one special character"),
+    confirm_password: z.string(),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: "Password Mismatch",
+    path: ["confirm_password"],
+  });
+
+export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
