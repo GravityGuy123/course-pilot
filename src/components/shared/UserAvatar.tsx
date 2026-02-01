@@ -11,7 +11,7 @@ interface UserInfo {
 
 interface UserAvatarProps {
   user: UserInfo;
-  size?: 24 | 32 | 40 | 48 | 80; // allowed sizes only
+  size?: 24 | 32 | 40 | 48 | 80;
   className?: string;
 }
 
@@ -23,6 +23,7 @@ export default function UserAvatar({
   const getInitials = (fullName: string) =>
     fullName
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .slice(0, 2)
       .join("")
@@ -37,11 +38,13 @@ export default function UserAvatar({
       "bg-yellow-500 dark:bg-yellow-600",
       "bg-pink-500 dark:bg-pink-600",
     ];
-    const hash = Array.from(name).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = Array.from(name).reduce(
+      (acc, char) => acc + char.charCodeAt(0),
+      0
+    );
     return colors[hash % colors.length];
   };
 
-  // Tailwind-safe size map
   const sizeClassMap: Record<number, string> = {
     24: "w-6 h-6 text-xs",
     32: "w-8 h-8 text-sm",
@@ -52,17 +55,21 @@ export default function UserAvatar({
 
   const sizeClasses = sizeClassMap[size];
 
-  // Build avatar URL
   const avatarUrl =
     user.avatar && user.avatar !== ""
       ? user.avatar.startsWith("http")
         ? user.avatar
-        : `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, "")}/${user.avatar.replace(/^\/?/, "")}`
+        : `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, "")}/${user.avatar.replace(
+            /^\/?/,
+            ""
+          )}`
       : null;
 
   if (avatarUrl) {
     return (
-      <div className={`rounded-full overflow-hidden ${sizeClasses} ${className}`}>
+      <div
+        className={`rounded-full overflow-hidden ${sizeClasses} ${className}`}
+      >
         <Image
           src={avatarUrl}
           alt={user.username}
@@ -75,10 +82,16 @@ export default function UserAvatar({
     );
   }
 
+  const isFill =
+    className.split(" ").includes("w-full") ||
+    className.split(" ").includes("h-full");
+
+  const baseSizeClasses = isFill ? "w-full h-full" : sizeClasses;
+
   return (
     <div
       aria-label={user.full_name}
-      className={`rounded-full ${sizeClasses} text-white font-semibold flex items-center justify-center ${getColorClass(
+      className={`rounded-full ${baseSizeClasses} text-white font-semibold flex items-center justify-center ${getColorClass(
         user.full_name
       )} ${className}`}
     >

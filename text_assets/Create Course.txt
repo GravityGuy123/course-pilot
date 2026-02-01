@@ -1,0 +1,348 @@
+To create a course on Cyber Security Fundamentals using the fields from your provided code, here's the necessary information for each section:
+
+Title:
+
+Set the course title to: Cyber Security Fundamentals.
+
+Description:
+
+A brief description could be:
+"This course provides an introduction to the essential concepts and practices in Cyber Security, covering topics such as threat analysis, risk management, security protocols, and more. Ideal for beginners aiming to understand how to protect digital systems and networks from cyber threats."
+
+Category:
+
+This will be fetched dynamically from the backend via the /tutor/courses/categories API. You may want to select the category that fits best, such as "Cyber Security", "Information Technology", or a related category from the list.
+
+Level: Beginner, Intermediate or Advanced
+
+Since this is a foundational course, you would likely want to choose Beginner from the available levels.
+
+Duration: 12 weeks
+
+For a comprehensive course on Cyber Security Fundamentals, a typical duration could be 12 weeks or 6 weeks, depending on how in-depth you want to go.
+
+Price: 50,000
+
+Set the price in Naira (₦). For example, you could set it to ₦50,000 (or whatever price you think is appropriate for a beginner-level course).
+
+Image:
+
+You'll need to upload a relevant image. A good placeholder could be a lock symbol, a computer security icon, or an image representing online protection. The image will be selected by the user during course creation.
+
+
+
+
+
+Summary of Fields:
+
+Title: "Cyber Security Fundamentals"
+
+Description: "This course provides an introduction to the essential concepts and practices in Cyber Security..."
+
+Category: (Dynamically fetched, select appropriate category)
+
+Level: Beginner
+
+Duration: 12 weeks (or choose another duration)
+
+Price: ₦50,000 (or as per your pricing)
+
+Image: (Upload relevant image)
+
+
+
+1. UI/UX Design Essentials
+
+Title: UI/UX Design Essentials
+
+Description: Learn the fundamentals of user interface and user experience design. This course covers design principles, wireframing, prototyping, color theory, typography, and how to create user-friendly digital products. Perfect for beginners aiming to kickstart a career in UI/UX.
+
+Category: Design / UI/UX (select from your categories list)
+
+Level: Beginner
+
+Duration: 8 weeks
+
+Price: 45,000
+
+Image Suggestion: Screenshot of a clean UI design, mockup, or wireframe.
+
+2. JavaScript for Beginners
+
+Title: JavaScript for Beginners
+
+Description: Start your journey in web development with JavaScript. This course introduces variables, functions, loops, objects, arrays, and DOM manipulation. Build small projects while gaining a solid foundation in JavaScript essentials.
+
+Category: Programming / Web Development
+
+Level: Beginner
+
+Duration: 6 weeks
+
+Price: 40,000
+
+Image Suggestion: Code editor screenshot with JavaScript code or JS logo.
+
+3. Backend with Node.js
+
+Title: Backend Development with Node.js
+
+Description: Learn to build robust server-side applications using Node.js. Topics include Express.js, REST APIs, authentication, database integration (MongoDB), and deploying backend services. Ideal for those looking to become backend developers.
+
+Category: Programming / Web Development
+
+Level: Intermediate
+
+Duration: 10 weeks
+
+Price: 60,000
+
+Image Suggestion: Diagram showing client-server architecture or Node.js logo.
+
+4. React & Next.js Mastery
+
+Title: React & Next.js Mastery
+
+Description: Master frontend development with React and Next.js. Learn component-based architecture, state management, hooks, server-side rendering, routing, API integration, and building production-ready applications.
+
+Category: Programming / Web Development
+
+Level: Advanced
+
+Duration: 12 weeks
+
+Price: 75,000
+
+Image Suggestion: Screenshot of React/Next.js app or Next.js logo.
+
+5. Python for Data Science
+
+Title: Python for Data Science
+
+Description: Dive into Python programming for data analysis. Cover NumPy, Pandas, Matplotlib, data cleaning, visualization, and basic statistical analysis. Perfect for beginners aiming to become data analysts or data scientists.
+
+Category: Programming / Data Science
+
+Level: Beginner
+
+Duration: 8 weeks
+
+Price: 50,000
+
+Image Suggestion: Python logo, data charts, or coding screenshot.
+
+6. Machine Learning Basics
+
+Title: Machine Learning Basics
+
+Description: Learn the fundamentals of machine learning using Python. Understand supervised vs unsupervised learning, regression, classification, and working with datasets using scikit-learn. Build small predictive models while grasping core ML concepts.
+
+Category: Programming / Data Science
+
+Level: Intermediate
+
+Duration: 10 weeks
+
+Price: 70,000
+
+Image Suggestion: Diagram of ML workflow, Python + ML icons.
+
+✅ Notes for CreateCoursePage:
+
+Use the title, description, level, duration, and price as strings/values.
+
+category_id: Map each category to its backend ID (you fetch via /courses/categories).
+
+For images, pick relevant high-quality visuals for each course.
+
+Prices are in ₦ and can be formatted using your handlePriceChange function.
+
+
+
+
+Perfect! Let’s create detailed info for these 5 additional courses in the same format so you can plug them into your CreateCoursePage.
+
+1. Cloud Computing with AWS
+
+Title: Cloud Computing with AWS
+
+Description: Learn how to leverage Amazon Web Services (AWS) to build, deploy, and scale cloud-based applications. Topics include EC2, S3, Lambda, IAM, and hands-on projects for real-world cloud solutions.
+
+Category: Programming / Cloud Computing
+
+Level: Intermediate
+
+Duration: 10 weeks
+
+Price: 80,000
+
+Image Suggestion: AWS logo or cloud architecture diagram.
+
+2. Database Design & SQL
+
+Title: Database Design & SQL
+
+Description: Master relational database concepts and SQL. Learn how to design normalized databases, write efficient queries, perform joins, indexing, and work with PostgreSQL or MySQL. Ideal for aspiring backend developers and data professionals.
+
+Category: Programming / Databases
+
+Level: Beginner
+
+Duration: 8 weeks
+
+Price: 45,000
+
+Image Suggestion: Database diagram or SQL query screenshot.
+
+3. Mobile Development with Flutter
+
+Title: Mobile Development with Flutter
+
+Description: Build cross-platform mobile apps using Flutter and Dart. Learn widgets, state management, navigation, API integration, and publishing apps on Android and iOS. Perfect for developers who want to create beautiful mobile experiences.
+
+Category: Programming / Mobile Development
+
+Level: Intermediate
+
+Duration: 12 weeks
+
+Price: 70,000
+
+Image Suggestion: Screenshot of Flutter app or Flutter logo.
+
+4. Business Analytics with Excel
+
+Title: Business Analytics with Excel
+
+Description: Gain practical skills in business analytics using Excel. Learn formulas, pivot tables, data visualization, dashboards, and basic statistical analysis to make informed business decisions.
+
+Category: Business / Analytics
+
+Level: Beginner
+
+Duration: 6 weeks
+
+Price: 35,000
+
+Image Suggestion: Excel dashboard screenshot or charts.
+
+5. Artificial Intelligence Concepts
+
+Title: Artificial Intelligence Concepts
+
+Description: Explore the fundamentals of artificial intelligence. Topics include AI history, search algorithms, neural networks, natural language processing, and ethical considerations in AI. Build foundational knowledge to pursue advanced AI projects.
+
+Category: Programming / AI
+
+Level: Intermediate
+
+Duration: 10 weeks
+
+Price: 90,000
+
+Image Suggestion: AI icon, neural network diagram, or abstract AI imagery.
+
+✅ Notes for your form:
+
+Keep category_id mapped from your backend.
+
+Level can be "Beginner", "Intermediate", or "Advanced" depending on the course.
+
+Price is in ₦ and can be formatted with your existing handlePriceChange logic.
+
+Use clear, representative images for the course thumbnails.
+
+
+
+
+Perfect. Below is clean, realistic module content you can immediately use to test Add Module for Cyber Security Fundamentals.
+This stays strictly within modules (not lessons yet).
+
+📘 Course: Cyber Security Fundamentals
+
+Level: Beginner
+Duration: 12 weeks
+
+✅ Recommended Modules (Beginner-friendly)
+Module 1: Introduction to Cyber Security
+
+Description:
+This module introduces the concept of cyber security, why it matters, and how cyber threats affect individuals, businesses, and governments. Students will gain a foundational understanding of the cyber security landscape.
+
+Order: 1
+Status: Draft
+
+Module 2: Types of Cyber Threats
+
+Description:
+Learn about common cyber threats such as malware, phishing, ransomware, spyware, and social engineering. This module explains how these attacks work and the damage they can cause.
+
+Order: 2
+Status: Draft
+
+Module 3: Basics of Network Security
+
+Description:
+This module covers fundamental network security concepts including firewalls, intrusion detection systems, secure network design, and common network vulnerabilities.
+
+Order: 3
+Status: Draft
+
+Module 4: Understanding Risk and Vulnerabilities
+
+Description:
+Students will learn how to identify security risks, understand vulnerabilities, and assess the impact of cyber attacks. The module introduces basic risk management concepts.
+
+Order: 4
+Status: Draft
+
+Module 5: Security Best Practices
+
+Description:
+This module focuses on everyday security practices such as strong passwords, multi-factor authentication, secure browsing, data protection, and safe use of public networks.
+
+Order: 5
+Status: Draft
+
+Module 6: Introduction to Ethical Hacking
+
+Description:
+An overview of ethical hacking, penetration testing, and how security professionals legally test systems to find weaknesses before attackers do.
+
+Order: 6
+Status: Draft
+
+Module 7: Cyber Security Careers and Next Steps
+
+Description:
+Explore career paths in cyber security, required skills, certifications, and learning resources for advancing beyond beginner level.
+
+Order: 7
+Status: Draft
+
+🔥 How to Test Properly
+
+When adding modules:
+
+Create them in order
+
+Keep them Draft
+
+Later you can test:
+
+Edit
+
+Delete
+
+Publish
+
+Reordering
+
+Next logical step (only when you’re ready)
+
+After modules are confirmed working:
+➡️ Add lessons inside Module 1
+
+If you want, say:
+“Give me lesson content for Module 1”
+and we’ll proceed cleanly and sequentially.

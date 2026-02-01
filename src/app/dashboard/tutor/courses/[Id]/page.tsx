@@ -23,9 +23,8 @@ function TutorCourseDetailsPage() {
       setError(null);
 
       try {
-        const res = await api.get<CoursePageDetails>(
-          `/courses/${id}`
-        );
+        // const res = await api.get<CoursePageDetails>(`/courses/${id}/`);
+        const res = await api.get<CoursePageDetails>(`/courses/tutor/${id}/`);
         setCourse(res.data);
       } catch (err: unknown) {
         let message = "An unexpected error occurred.";
