@@ -45,7 +45,7 @@ export default function Header() {
         {isLoggedIn && user ? (
           <div className="flex items-center gap-2">
             <Link
-              href="/user/settings"
+              href="/dashboard/profile/settings"
               aria-label="Go to settings"
               className="group relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 dark:focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-gray-800">
               <UserAvatar

@@ -34,7 +34,7 @@ const guestNavigation: MenuItemType[] = [
 
 const authNavigation: MenuItemType[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Inbox", url: "/inbox", icon: Inbox },
+  { title: "Inbox", url: "/dashboard/inbox", icon: Inbox },
   { title: "Courses", url: "/courses", icon: GraduationCap },
   { title: "Lessons", url: "/lessons", icon: FiBookOpen },
   { title: "Tasks", url: "/tasks", icon: FiCheckSquare },

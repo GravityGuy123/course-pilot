@@ -25,7 +25,7 @@ type MenuItemType = {
 const userItems: MenuItemType[] = [
   {
     title: "Settings",
-    url: "/user/settings",
+    url: "/dashboard/profile/settings",
     icon: Settings,
   },
   {

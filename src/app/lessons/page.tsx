@@ -1,3 +1,5 @@
+// Page should not exist, delete later
+
 "use client";
 
 import React from "react";
