@@ -67,10 +67,7 @@ function RoleBadge({
   );
 }
 
-function KeyValueRow({
-  label,
-  value,
-}: {
+function KeyValueRow({ label, value, }: {
   label: string;
   value: React.ReactNode;
 }) {

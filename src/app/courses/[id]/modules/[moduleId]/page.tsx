@@ -202,11 +202,11 @@ function ModuleDetailsPageInner({
       <div className="mx-auto w-full max-w-6xl space-y-4 sm:space-y-5">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1 min-w-0">
-            <p className="text-xs text-gray-500 dark:text-gray-400 break-words">
+            <p className="text-xs text-gray-500 dark:text-gray-400 wrap-break-word">
               {courseTitle ? courseTitle : "Course"} • Module
             </p>
 
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 break-words">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 wrap-break-word">
               {headerTitle}
             </h1>
 
@@ -283,7 +283,7 @@ function ModuleDetailsPageInner({
                   key={l.id}
                   className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 hover:shadow-sm transition"
                 >
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 break-words">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 wrap-break-word">
                     {l.title}
                   </p>
 
@@ -312,7 +312,8 @@ function ModuleDetailsPageInner({
         </section>
 
         <p className="text-xs text-gray-500 dark:text-gray-400">
-          This page intentionally reuses the curriculum endpoint to avoid extra backend routes.
+          This page intentionally reuses the curriculum endpoint to avoid extra
+          backend routes.
         </p>
       </div>
     </main>

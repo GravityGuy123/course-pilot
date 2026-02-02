@@ -293,12 +293,12 @@ function InboxMessagePageInner({ id }: { id: string }) {
             </div>
           ) : (
             <div className="p-4 sm:p-7 space-y-5">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 break-words">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 wrap-break-word">
                 {item.title}
               </h1>
 
               <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
-                <p className="whitespace-pre-wrap break-words text-gray-800 dark:text-gray-100">
+                <p className="whitespace-pre-wrap wrap-break-word text-gray-800 dark:text-gray-100">
                   {item.message || "—"}
                 </p>
               </div>

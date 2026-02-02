@@ -425,15 +425,6 @@ function InboxPageInner() {
               <p className="text-base font-semibold text-gray-900 dark:text-gray-100">
                 No messages
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                If you expect messages, confirm your backend list endpoint.
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                This page tries{" "}
-                <span className="font-mono">/notifications/</span>,{" "}
-                <span className="font-mono">/notifications/inbox/</span>, then{" "}
-                <span className="font-mono">/inbox/</span>.
-              </p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -446,7 +437,7 @@ function InboxPageInner() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 break-words">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 wrap-break-word">
                             {m.title || "Message"}
                           </p>
 
@@ -469,7 +460,7 @@ function InboxPageInner() {
                           ) : null}
                         </div>
 
-                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 break-words">
+                        <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 wrap-break-word">
                           {clipPreview(m.message, 140) || "—"}
                         </p>
                       </div>
@@ -489,10 +480,6 @@ function InboxPageInner() {
             </ul>
           )}
         </section>
-
-        <footer className="text-xs text-gray-500 dark:text-gray-400">
-          Tip: If message details load but list is empty, your backend might only support a different inbox list route.
-        </footer>
       </div>
     </main>
   );

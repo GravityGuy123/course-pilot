@@ -221,10 +221,12 @@ function CourseModulesPageInner({ courseId }: { courseId: string }) {
                 No modules yet
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                If this course has content, verify your curriculum endpoint response shape.
+                If this course has content, verify your curriculum endpoint
+                response shape.
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                This page expects <span className="font-mono">/courses/:id/curriculum/</span>.
+                This page expects{" "}
+                <span className="font-mono">/courses/:id/curriculum/</span>.
               </p>
             </div>
           ) : (
@@ -237,7 +239,7 @@ function CourseModulesPageInner({ courseId }: { courseId: string }) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 break-words group-hover:text-violet-700 dark:group-hover:text-violet-400">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 wrap-break-word group-hover:text-violet-700 dark:group-hover:text-violet-400">
                         {m.title}
                       </p>
 

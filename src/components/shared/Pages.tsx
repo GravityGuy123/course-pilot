@@ -1,9 +1,11 @@
+// src/components/shared/Pages.tsx
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type IconType } from "react-icons";
-import { type LucideIcon,
+import type { IconType } from "react-icons";
+import {
+  type LucideIcon,
   Home,
   GraduationCap,
   LayoutDashboard,
@@ -11,6 +13,8 @@ import { type LucideIcon,
   Users,
   Info,
   Mail,
+  BadgeCheck,
+  Headphones,
 } from "lucide-react";
 import { FiBookOpen, FiCheckSquare } from "react-icons/fi";
 import { useAuth } from "@/context/auth-context";
@@ -19,6 +23,7 @@ type MenuItemType = {
   title: string;
   url: string;
   icon: LucideIcon | IconType;
+  exact?: boolean;
 };
 
 interface PagesProps {
@@ -26,25 +31,43 @@ interface PagesProps {
 }
 
 const guestNavigation: MenuItemType[] = [
-  { title: "Home", url: "/", icon: Home },
+  { title: "Home", url: "/", icon: Home, exact: true },
   { title: "Courses", url: "/courses", icon: GraduationCap },
-  { title: "About", url: "/about", icon: Info },
-  { title: "Contact", url: "/contact", icon: Mail },
+  { title: "About", url: "/about", icon: Info, exact: true },
+  { title: "Contact", url: "/contact", icon: Mail, exact: true },
 ];
 
 const authNavigation: MenuItemType[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  // ✅ only active on /dashboard exactly
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, exact: true },
+
+  // ✅ active on /dashboard/inbox + /dashboard/inbox/[id]
   { title: "Inbox", url: "/dashboard/inbox", icon: Inbox },
+
+  // Learning
+  { title: "Enrollments", url: "/dashboard/enrollments", icon: BadgeCheck },
+  { title: "Lessons", url: "/dashboard/student/lessons", icon: FiBookOpen },
+  { title: "Tasks", url: "/dashboard/tasks", icon: FiCheckSquare },
+  { title: "Groups", url: "/dashboard/groups", icon: Users },
+
+  // Discovery
   { title: "Courses", url: "/courses", icon: GraduationCap },
-  { title: "Lessons", url: "/lessons", icon: FiBookOpen },
-  { title: "Tasks", url: "/tasks", icon: FiCheckSquare },
-  { title: "Groups", url: "/groups", icon: Users },
+
+  // Help
+  { title: "Support", url: "/dashboard/support", icon: Headphones },
 ];
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function isActivePath(pathname: string, item: MenuItemType) {
+  if (item.exact) return pathname === item.url;
+  return pathname === item.url || pathname.startsWith(item.url + "/");
+}
 
 export default function Pages({ onLinkClick }: PagesProps) {
   const pathname = usePathname();
-
-  // ✅ Use real auth state
   const { isLoggedIn } = useAuth();
 
   const navigation = isLoggedIn ? authNavigation : guestNavigation;
@@ -57,22 +80,28 @@ export default function Pages({ onLinkClick }: PagesProps) {
 
       <nav className="flex flex-col space-y-1 px-3">
         {navigation.map((item) => {
-          const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
+          const isActive = isActivePath(pathname, item);
+          const Icon = item.icon;
+
           return (
             <Link
               key={item.title}
               href={item.url}
               onClick={onLinkClick}
-              className={`flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors ${
+              aria-current={isActive ? "page" : undefined}
+              className={cx(
+                "flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60",
                 isActive
                   ? "bg-violet-400 text-white dark:bg-violet-600 dark:text-white"
                   : "text-violet-400 hover:bg-violet-100 dark:text-gray-300 dark:hover:bg-violet-700"
-              }`}
+              )}
             >
-              <item.icon
-                className={`h-5 w-5 ${
+              <Icon
+                className={cx(
+                  "h-5 w-5",
                   isActive ? "text-white" : "text-violet-400 dark:text-gray-300"
-                }`}
+                )}
               />
               <span className="font-medium">{item.title}</span>
             </Link>

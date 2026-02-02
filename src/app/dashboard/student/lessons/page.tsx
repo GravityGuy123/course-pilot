@@ -304,10 +304,10 @@ function StudentLessonsPageInner() {
                     key={l.id}
                     className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 hover:shadow-sm transition"
                   >
-                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 break-words">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 wrap-break-word">
                       {l.title}
                     </p>
-                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 break-words">
+                    <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 wrap-break-word">
                       {l.courseTitle ?? "Course"}
                       {l.moduleTitle ? ` • ${l.moduleTitle}` : ""}
                     </p>

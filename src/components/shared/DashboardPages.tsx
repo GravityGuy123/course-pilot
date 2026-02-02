@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type React from "react";
 import {
   LayoutDashboard,
   GraduationCap,
@@ -22,6 +23,10 @@ interface PagesProps {
   onLinkClick?: () => void;
 }
 
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
 export default function DashboardPages({ onLinkClick }: PagesProps) {
   const pathname = usePathname();
   const { user, isLoggedIn } = useAuth();
@@ -29,10 +34,10 @@ export default function DashboardPages({ onLinkClick }: PagesProps) {
   if (!isLoggedIn) return null;
 
   const hasAnyRole =
-    user?.is_student ||
-    user?.is_tutor ||
-    user?.is_moderator ||
-    user?.is_admin;
+    !!user?.is_student ||
+    !!user?.is_tutor ||
+    !!user?.is_moderator ||
+    !!user?.is_admin;
 
   const dashboards: DashboardItem[] = [
     {
@@ -67,22 +72,20 @@ export default function DashboardPages({ onLinkClick }: PagesProps) {
     },
   ];
 
-  const visibleDashboards = dashboards.filter(
-    (dashboard) => dashboard.condition
-  );
+  const visibleDashboards = dashboards.filter((d) => d.condition);
 
   if (visibleDashboards.length === 0) return null;
 
   return (
     <div className="flex flex-col mb-6">
-      {/* Section title */}
       <span className="text-base font-bold uppercase tracking-wider text-violet-400 dark:text-indigo-200 px-3 mt-6 mb-2">
         Dashboards
       </span>
 
       <nav className="flex flex-col space-y-1 px-3">
         {visibleDashboards.map((item) => {
-          const isActive = pathname === item.url || pathname.startsWith(item.url + "/");
+          const isActive =
+            pathname === item.url || pathname.startsWith(item.url + "/");
           const Icon = item.icon;
 
           return (
@@ -90,34 +93,36 @@ export default function DashboardPages({ onLinkClick }: PagesProps) {
               key={item.title}
               href={item.url}
               onClick={onLinkClick}
-              className="group flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors text-violet-400 hover:bg-violet-100 dark:text-gray-300 dark:hover:bg-violet-700"
+              className={cx(
+                "group flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60",
+                isActive
+                  ? "bg-violet-400 text-white dark:bg-violet-600 dark:text-white"
+                  : "text-violet-400 hover:bg-violet-100 dark:text-gray-300 dark:hover:bg-violet-700"
+              )}
             >
               {/* Active indicator */}
               <span
-                className={`h-2 w-2 rounded-full transition ${
+                className={cx(
+                  "h-2 w-2 rounded-full transition",
                   isActive
                     ? "bg-emerald-500"
                     : "bg-transparent group-hover:bg-emerald-400/50"
-                }`}
+                )}
+                aria-hidden="true"
               />
 
               {/* Icon */}
               <Icon
-                className={`h-5 w-5 transition ${
-                  isActive
-                    ? "text-emerald-500"
-                    : "text-violet-400 dark:text-gray-300"
-                }`}
+                className={cx(
+                  "h-5 w-5 transition",
+                  isActive ? "text-white" : "text-violet-400 dark:text-gray-300"
+                )}
+                aria-hidden="true"
               />
 
               {/* Label */}
-              <span
-                className={`font-medium transition ${
-                  isActive ? "text-emerald-600 dark:text-emerald-400" : ""
-                }`}
-              >
-                {item.title}
-              </span>
+              <span className="font-medium">{item.title}</span>
             </Link>
           );
         })}
