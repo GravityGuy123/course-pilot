@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
       await authApi.post("/password-reset/", { email: data.email });
 
       // backend always returns 200 (anti-enumeration). Great.
-      toast.success("If an account exists, a reset email was sent.", toastStyle.success);
+      toast.success("If the email is linked to an account, a reset link has been sent.", toastStyle.success);
 
       // optional UX: return to login after a short moment
       window.setTimeout(() => router.push("/login"), 1200);
@@ -121,14 +121,14 @@ export default function ForgotPasswordPage() {
 
   return (
     <main className="min-h-[100dvh]-">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-10- sm:px-6 lg:px-8">
         <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-950 sm:p-8">
           <header className="mb-6">
             <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl">
               Forgot password
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Enter your email and we’ll send you a reset link.
+              Enter the email linked to your account. If it matches an account, we’ll send a reset link.
             </p>
           </header>
 
@@ -154,23 +154,21 @@ export default function ForgotPasswordPage() {
                 placeholder="Enter your email"
                 disabled={isSubmitting}
                 {...register("email")}
-                className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm transition
-                           placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500
-                           disabled:cursor-not-allowed disabled:opacity-60
-                           dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-indigo-400"
-              />
+                className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-gray-900 shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-indigo-400" />
               {errors.email?.message ? (
                 <p className="mt-1 text-sm text-red-600 dark:text-red-300">{errors.email.message}</p>
               ) : null}
             </div>
 
+            <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+              For security reasons, reset links are only sent to the email address registered on your
+              CoursePilot account. We can’t confirm whether an account exists.
+            </p>
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition
-                         hover:bg-violet-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2
-                         disabled:cursor-not-allowed disabled:opacity-60
-                         dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950"
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950"
             >
               {isSubmitting ? (
                 <>

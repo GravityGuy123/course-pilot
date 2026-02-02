@@ -139,6 +139,9 @@ export default function ResetPasswordClient() {
     }
   };
 
+  const inputClass = "w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pr-12 text-gray-900 shadow-sm transition placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-indigo-400";
+  const buttonClass = "absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 transition hover:text-violet-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:hover:text-indigo-300 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950";
+
   return (
     <main className="min-h-[100dvh]-">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
@@ -175,21 +178,14 @@ export default function ResetPasswordClient() {
                   placeholder="Enter a strong password"
                   disabled={isSubmitting}
                   {...register("new_password")}
-                  className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pr-12 text-gray-900 shadow-sm transition
-                             placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500
-                             disabled:cursor-not-allowed disabled:opacity-60
-                             dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-indigo-400"
+                  className={inputClass}
                 />
                 <button
                   type="button"
                   onClick={() => setShow1((v) => !v)}
                   disabled={isSubmitting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 transition hover:text-violet-700
-                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2
-                             disabled:cursor-not-allowed disabled:opacity-60
-                             dark:hover:text-indigo-300 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950"
-                  aria-label={show1 ? "Hide password" : "Show password"}
-                >
+                  className={buttonClass}
+                  aria-label={show1 ? "Hide password" : "Show password"}>
                   {show1 ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
@@ -212,19 +208,13 @@ export default function ResetPasswordClient() {
                   placeholder="Re-enter your password"
                   disabled={isSubmitting}
                   {...register("confirm_password")}
-                  className="w-full rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 pr-12 text-gray-900 shadow-sm transition
-                             placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-500
-                             disabled:cursor-not-allowed disabled:opacity-60
-                             dark:border-gray-800 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500 dark:focus:ring-indigo-400"
+                  className={inputClass} 
                 />
                 <button
                   type="button"
                   onClick={() => setShow2((v) => !v)}
                   disabled={isSubmitting}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 transition hover:text-violet-700
-                             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2
-                             disabled:cursor-not-allowed disabled:opacity-60
-                             dark:hover:text-indigo-300 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950"
+                  className={buttonClass}
                   aria-label={show2 ? "Hide password" : "Show password"}
                 >
                   {show2 ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -236,13 +226,11 @@ export default function ResetPasswordClient() {
               ) : null}
             </div>
 
+
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition
-                         hover:bg-violet-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2
-                         disabled:cursor-not-allowed disabled:opacity-60
-                         dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950"
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-violet-700 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-violet-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-indigo-600 dark:hover:bg-indigo-700 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-950"
             >
               {isSubmitting ? (
                 <>
