@@ -1,278 +1,449 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { isAxiosError } from "axios";
+"use client";
+
+import Link from "next/link";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { AxiosError, AxiosRequestConfig } from "axios";
 
 import { api } from "@/lib/axios.config";
+import { Spinner } from "@/components/ui/spinner";
 import { ErrorToast, SuccessToast } from "@/lib/toast";
 
-export type NotificationItem = {
+type ApiErrorPayload = {
+  detail?: string;
+  message?: string;
+  error?: string;
+};
+
+function getAxiosMessage(err: unknown, fallback: string): string {
+  const axiosErr = err as AxiosError<ApiErrorPayload>;
+  return (
+    axiosErr?.response?.data?.detail ||
+    axiosErr?.response?.data?.message ||
+    axiosErr?.response?.data?.error ||
+    axiosErr?.message ||
+    fallback
+  );
+}
+
+type AnyErr = { name?: string; code?: string; message?: string };
+
+function isCanceled(err: unknown): boolean {
+  const e = err as AnyErr;
+  return (
+    e?.name === "CanceledError" ||
+    e?.name === "AbortError" ||
+    e?.code === "ERR_CANCELED"
+  );
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null;
+}
+
+function pickString(v: unknown, fallback = ""): string {
+  return typeof v === "string" ? v : fallback;
+}
+
+function pickBoolean(v: unknown): boolean | undefined {
+  return typeof v === "boolean" ? v : undefined;
+}
+
+type NotificationItem = {
   id: string;
   title: string;
   message: string;
-  is_read: boolean;
   created_at?: string;
+  read?: boolean;
+  type?: string;
 };
 
+function normalizeNotification(raw: unknown, idFallback: string): NotificationItem {
+  const r = isRecord(raw) ? raw : {};
 
-function getFirstErrorMessage(value: unknown): string | null {
-  if (!value) return null;
-  if (typeof value === "string") return value;
+  const id =
+    pickString(r.id, idFallback) ||
+    pickString(r.notification_id, idFallback) ||
+    pickString(r.notificationId, idFallback) ||
+    idFallback;
 
-  if (Array.isArray(value)) {
-    const first = value[0];
-    return typeof first === "string" ? first : null;
-  }
+  const title = pickString(r.title, "Notification");
 
-  if (typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-    if (typeof obj.detail === "string") return obj.detail;
-  }
+  const message =
+    pickString(r.message, "") ||
+    pickString(r.body, "") ||
+    pickString(r.content, "");
 
-  return null;
+  const created_at =
+    pickString(r.created_at, "") ||
+    pickString(r.createdAt, "") ||
+    pickString(r.created, "") ||
+    "";
+
+  const read =
+    pickBoolean(r.read) ??
+    pickBoolean(r.is_read) ??
+    pickBoolean(r.isRead) ??
+    (typeof r.is_read === "boolean" ? r.is_read : undefined) ??
+    (typeof r.isRead === "boolean" ? r.isRead : undefined);
+
+  const type =
+    pickString(r.type, "") ||
+    pickString(r.category, "") ||
+    pickString(r.kind, "");
+
+  return {
+    id,
+    title,
+    message,
+    created_at: created_at || undefined,
+    read,
+    type: type || undefined,
+  };
 }
 
-function formatRelativeDate(value?: string): string | null {
-  if (!value) return null;
+function extractList(payload: unknown): unknown[] {
+  // Accept:
+  // - []
+  // - { results: [] }
+  // - { data: [] }
+  // - { data: { results: [] } }
+  if (Array.isArray(payload)) return payload;
+
+  if (!isRecord(payload)) return [];
+
+  const results = payload.results;
+  if (Array.isArray(results)) return results;
+
+  const data = payload.data;
+  if (Array.isArray(data)) return data;
+
+  if (isRecord(data) && Array.isArray(data.results)) return data.results;
+
+  return [];
+}
+
+function formatWhen(value?: string): string {
+  if (!value) return "";
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
+}
 
-  const diffMs = Date.now() - d.getTime();
-  const diffSec = Math.floor(diffMs / 1000);
-  const diffMin = Math.floor(diffSec / 60);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
+/**
+ * Shared tiny store (module scope) so Toolbar can trigger refresh without prop drilling.
+ * This avoids wiring state through the Profile page.
+ */
+type Controls = {
+  refresh: () => void;
+  toggleUnreadOnly: () => void;
+  markAllRead: () => void;
+  unreadOnly: boolean;
+  loading: boolean;
+  count: number;
+  unreadCount: number;
+};
 
-  if (diffSec < 60) return "Just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
-
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+let controls: Controls | null = null;
+function setControls(next: Controls | null) {
+  controls = next;
+}
+function getControls() {
+  return controls;
 }
 
 export function NotificationsToolbar({ isDark }: { isDark: boolean }) {
-  const [markingAll, setMarkingAll] = useState(false);
+  const [, force] = useState(0);
 
-  const markAllRead = useCallback(async () => {
-    setMarkingAll(true);
-    try {
-      await api.post("/notifications/read-all/");
-      SuccessToast("All notifications marked as read", isDark);
-      window.dispatchEvent(new CustomEvent("coursepilot:notifications:refetch"));
-    } catch (err) {
-      const msg = isAxiosError(err)
-        ? getFirstErrorMessage(err.response?.data) || "Failed to mark all as read"
-        : "Failed to mark all as read";
-      ErrorToast(msg, isDark);
-    } finally {
-      setMarkingAll(false);
-    }
-  }, [isDark]);
+  // keep UI reactive when panel updates controls
+  useEffect(() => {
+    const t = window.setInterval(() => force((x) => x + 1), 400);
+    return () => window.clearInterval(t);
+  }, []);
+
+  const c = getControls();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
       <button
         type="button"
-        onClick={markAllRead}
-        disabled={markingAll}
-        className="inline-flex w-full sm:w-auto items-center justify-center rounded-md border px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:text-gray-100 dark:border-gray-700 dark:hover:bg-gray-800 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50"
+        onClick={() => c?.toggleUnreadOnly()}
+        disabled={!c || c.loading}
+        className="inline-flex w-full sm:w-auto items-center justify-center rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-60"
+        title="Show only unread"
       >
-        {markingAll ? "Marking..." : "Mark all read"}
+        {c?.unreadOnly ? "Showing: Unread" : "Showing: All"}
       </button>
+
+      <button
+        type="button"
+        onClick={() => c?.refresh()}
+        disabled={!c || c.loading}
+        className="inline-flex w-full sm:w-auto items-center justify-center rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-60"
+      >
+        Refresh
+      </button>
+
+      <button
+        type="button"
+        onClick={() => c?.markAllRead()}
+        disabled={!c || c.loading || (c.unreadCount ?? 0) === 0}
+        className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-700 active:bg-violet-800 transition disabled:opacity-60"
+      >
+        Mark all read{typeof c?.unreadCount === "number" ? ` (${c.unreadCount})` : ""}
+      </button>
+
+      {/* Small counts */}
+      <div className="text-xs text-gray-500 dark:text-gray-400 sm:ml-2">
+        {c ? (
+          <>
+            <span className="font-medium">{c.count}</span> total ·{" "}
+            <span className="font-medium">{c.unreadCount}</span> unread
+          </>
+        ) : (
+          "—"
+        )}
+      </div>
     </div>
   );
 }
 
 export function NotificationsPanel({ isDark }: { isDark: boolean }) {
-  const [notes, setNotes] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refetchKey, setRefetchKey] = useState(0);
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
-  const [markingId, setMarkingId] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(false);
 
-  const refetch = useCallback(async () => {
+  const fetchNotifications = useCallback(async () => {
+    setError(null);
     setLoading(true);
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    const config: AxiosRequestConfig = {
+      signal: controller.signal,
+      timeout: 15000,
+    };
+
     try {
-      const res = await api.get("/notifications/");
-      const data = Array.isArray(res.data) ? res.data : [];
-      setNotes(data);
-    } catch (err) {
-      const msg = isAxiosError(err)
-        ? getFirstErrorMessage(err.response?.data) || "Failed to load notifications"
-        : "Failed to load notifications";
+      // Try most likely endpoints (based on your Inbox details: /notifications/<id>/)
+      const endpoints = ["/notifications/", "/notifications/me/"];
+
+      let lastErr: unknown = null;
+      let data: unknown = null;
+
+      for (const url of endpoints) {
+        try {
+          const res = await api.get(url, config);
+          data = res?.data;
+          break;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+
+      if (!mountedRef.current) return;
+
+      if (data === null) {
+        const msg = getAxiosMessage(lastErr, "Failed to load notifications");
+        setError(msg);
+        ErrorToast(msg, isDark);
+        setItems([]);
+        return;
+      }
+
+      const list = extractList(data);
+      const normalized = list.map((raw, idx) =>
+        normalizeNotification(raw, String(idx))
+      );
+
+      // Newest first (best UX)
+      normalized.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      });
+
+      setItems(normalized);
+    } catch (err: unknown) {
+      if (!mountedRef.current) return;
+      if (isCanceled(err)) return;
+
+      const msg = getAxiosMessage(err, "Failed to load notifications");
+      setError(msg);
       ErrorToast(msg, isDark);
-      setNotes([]);
+      setItems([]);
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   }, [isDark]);
 
-  useEffect(() => {
-    void refetch();
-  }, [refetchKey, refetch]);
+  const markAllRead = useCallback(async () => {
+    if (items.length === 0) return;
 
-  useEffect(() => {
-    const handler = () => setRefetchKey((k) => k + 1);
-    window.addEventListener(
-      "coursepilot:notifications:refetch",
-      handler as EventListener
-    );
-    return () =>
-      window.removeEventListener(
-        "coursepilot:notifications:refetch",
-        handler as EventListener
-      );
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Best case: backend has bulk endpoint
+      try {
+        await api.post("/notifications/read-all/");
+      } catch {
+        // Fallback: patch each unread item (sequential to avoid spamming backend)
+        for (const n of items) {
+          if (n.read === true) continue;
+
+          try {
+            await api.post(`/notifications/${n.id}/read/`);
+          } catch {
+            await api.patch(`/notifications/${n.id}/`, { read: true });
+          }
+        }
+      }
+
+      // Update UI locally
+      setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+      SuccessToast("All notifications marked as read", isDark);
+    } catch (err: unknown) {
+      const msg = getAxiosMessage(err, "Could not mark all as read");
+      setError(msg);
+      ErrorToast(msg, isDark);
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, [isDark, items]);
+
+  const toggleUnreadOnly = useCallback(() => {
+    setUnreadOnly((v) => !v);
   }, []);
 
-  const unreadCount = useMemo(
-    () => notes.reduce((acc, n) => acc + (n.is_read ? 0 : 1), 0),
-    [notes]
-  );
+  const visible = useMemo(() => {
+    if (!unreadOnly) return items;
+    return items.filter((n) => n.read !== true);
+  }, [items, unreadOnly]);
 
-  const markRead = useCallback(
-    async (id: string) => {
-      setMarkingId(id);
-      try {
-        await api.post(`/notifications/${id}/read/`);
-        setNotes((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, is_read: true } : p))
-        );
-      } catch (err) {
-        const msg = isAxiosError(err)
-          ? getFirstErrorMessage(err.response?.data) || "Failed to mark as read"
-          : "Failed to mark as read";
-        ErrorToast(msg, isDark);
-      } finally {
-        setMarkingId(null);
-      }
-    },
-    [isDark]
-  );
+  const unreadCount = useMemo(() => items.filter((n) => n.read !== true).length, [items]);
 
-  if (loading) {
-    return (
-      <div className="p-4 sm:p-5">
-        <div className="space-y-3">
-          <div className="h-14 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-          <div className="h-14 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-          <div className="h-14 rounded-lg bg-gray-100 dark:bg-gray-800 animate-pulse" />
-        </div>
-      </div>
-    );
-  }
+  // expose controls for toolbar
+  useEffect(() => {
+    setControls({
+      refresh: fetchNotifications,
+      toggleUnreadOnly,
+      markAllRead,
+      unreadOnly,
+      loading,
+      count: items.length,
+      unreadCount,
+    });
 
-  if (notes.length === 0) {
-    return (
-      <div className="p-4 sm:p-5">
-        <div className="rounded-xl border border-dashed p-6 text-center">
-          <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-            No notifications yet
-          </p>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            You’ll see updates about enrollments, lessons, and platform activity here.
-          </p>
-          <button
-            type="button"
-            onClick={() => setRefetchKey((k) => k + 1)}
-            className="mt-4 inline-flex items-center justify-center rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-    );
-  }
+    return () => {
+      setControls(null);
+    };
+  }, [fetchNotifications, toggleUnreadOnly, markAllRead, unreadOnly, loading, items.length, unreadCount]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchNotifications();
+
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+    };
+  }, [fetchNotifications]);
 
   return (
     <div className="p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          {unreadCount > 0 ? (
-            <>
-              <span className="font-semibold text-gray-900 dark:text-gray-100">
-                {unreadCount}
-              </span>{" "}
-              unread
-            </>
-          ) : (
-            "All caught up"
-          )}
-        </p>
-
-        <button
-          type="button"
-          onClick={() => setRefetchKey((k) => k + 1)}
-          className="text-sm font-medium text-violet-700 hover:text-violet-800 dark:text-violet-300 dark:hover:text-violet-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 rounded"
+      {error ? (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 px-4 py-3 text-sm text-red-800 dark:text-red-200"
         >
-          Refresh
-        </button>
-      </div>
+          {error}
+        </div>
+      ) : null}
 
-      <ul className="mt-4 space-y-3">
-        {notes.map((n) => {
-          const timeLabel = formatRelativeDate(n.created_at);
-          const isUnread = !n.is_read;
-
-          return (
+      {loading ? (
+        <div className="py-10 flex items-center justify-center">
+          <Spinner />
+          <span className="sr-only">Loading notifications</span>
+        </div>
+      ) : visible.length === 0 ? (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 text-sm text-gray-600 dark:text-gray-300">
+          {unreadOnly ? "No unread notifications." : "No notifications yet."}{" "}
+          <Link
+            href="/dashboard/inbox"
+            className="text-violet-700 dark:text-violet-400 font-medium hover:underline underline-offset-4"
+          >
+            Open inbox
+          </Link>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {visible.map((n) => (
             <li
               key={n.id}
-              className={[
-                "rounded-xl border p-4 sm:p-5",
-                "bg-white dark:bg-gray-900",
-                isUnread
-                  ? "border-violet-200 dark:border-violet-900/50"
-                  : "border-gray-200 dark:border-gray-800",
-              ].join(" ")}
+              className={`rounded-xl border p-4 sm:p-5 transition ${
+                n.read
+                  ? "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                  : "border-violet-200 dark:border-violet-900/40 bg-violet-50/50 dark:bg-violet-900/10"
+              }`}
             >
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="flex items-start gap-2">
-                    {isUnread ? (
-                      <span
-                        className="mt-1 inline-block h-2.5 w-2.5 rounded-full bg-violet-600 shrink-0"
-                        aria-hidden="true"
-                      />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link
+                      href={`/dashboard/inbox/${n.id}`}
+                      className="font-semibold text-gray-900 dark:text-gray-100 hover:underline underline-offset-4 break-words"
+                    >
+                      {n.title || "Notification"}
+                    </Link>
+
+                    {n.type ? (
+                      <span className="text-[11px] font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                        {n.type}
+                      </span>
                     ) : null}
 
-                    <div className="min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 wrap-break-word">
-                        {n.title}
-                      </p>
-                      {timeLabel ? (
-                        <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                          {timeLabel}
-                        </p>
-                      ) : null}
-                    </div>
+                    {typeof n.read === "boolean" ? (
+                      <span
+                        className={`text-[11px] font-semibold px-2 py-1 rounded-full ${
+                          n.read
+                            ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300"
+                            : "bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300"
+                        }`}
+                      >
+                        {n.read ? "Read" : "Unread"}
+                      </span>
+                    ) : null}
                   </div>
 
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 wrap-break-word">
-                    {n.message}
+                  {n.created_at ? (
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {formatWhen(n.created_at)}
+                    </p>
+                  ) : null}
+
+                  <p className="mt-3 text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap break-words">
+                    {n.message || "—"}
                   </p>
                 </div>
 
-                {!n.is_read ? (
-                  <button
-                    type="button"
-                    onClick={() => markRead(n.id)}
-                    disabled={markingId === n.id}
-                    className="inline-flex w-full sm:w-auto items-center justify-center rounded-md bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900 disabled:opacity-50"
+                <div className="shrink-0">
+                  <Link
+                    href={`/dashboard/inbox/${n.id}`}
+                    className="inline-flex items-center justify-center rounded-md border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-xs font-semibold text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
                   >
-                    {markingId === n.id ? "Marking..." : "Mark read"}
-                  </button>
-                ) : (
-                  <span className="inline-flex w-full sm:w-auto items-center justify-center rounded-md border px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 dark:border-gray-800">
-                    Read
-                  </span>
-                )}
+                    View
+                  </Link>
+                </div>
               </div>
             </li>
-          );
-        })}
-      </ul>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

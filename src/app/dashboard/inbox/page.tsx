@@ -34,57 +34,24 @@ function pickBoolean(v: unknown): boolean | undefined {
   return typeof v === "boolean" ? v : undefined;
 }
 
-/**
- * Strict UUID check without regex:
- * - 36 chars
- * - 5 parts: 8-4-4-4-12
- * - hex only
- */
-function isUuid(v: string): boolean {
-  const s = (v || "").trim();
-  if (s.length !== 36) return false;
-
-  const parts = s.split("-");
-  if (parts.length !== 5) return false;
-
-  const sizes = [8, 4, 4, 4, 12];
-  for (let i = 0; i < 5; i += 1) {
-    const p = parts[i];
-    if (p.length !== sizes[i]) return false;
-
-    // hex-only
-    for (let j = 0; j < p.length; j += 1) {
-      const c = p[j];
-      const isHex =
-        (c >= "0" && c <= "9") ||
-        (c >= "a" && c <= "f") ||
-        (c >= "A" && c <= "F");
-      if (!isHex) return false;
-    }
-  }
-
-  return true;
-}
+// ✅ regex is best here (clean + reliable)
+const UUID_RE =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
 
 function normalizeInboxItem(raw: unknown): InboxItem | null {
   const r = isRecord(raw) ? raw : {};
 
-  // ✅ IMPORTANT: support common backend keys for UUID
   const candidateId =
     pickString(r.id, "") ||
     pickString(r.notification_id, "") ||
     pickString(r.notificationId, "");
 
   const id = candidateId.trim();
-
-  // ✅ Do NOT create fake ids. If we can't find a real UUID, skip item.
-  if (!id || !isUuid(id)) return null;
+  if (!id || !UUID_RE.test(id)) return null;
 
   const title = pickString(r.title, "Message");
   const message =
-    pickString(r.message, "") ||
-    pickString(r.body, "") ||
-    pickString(r.content, "");
+    pickString(r.message, "") || pickString(r.body, "") || pickString(r.content, "");
 
   const created_at =
     pickString(r.created_at, "") ||
@@ -100,9 +67,7 @@ function normalizeInboxItem(raw: unknown): InboxItem | null {
     (typeof r.isRead === "boolean" ? r.isRead : undefined);
 
   const type =
-    pickString(r.type, "") ||
-    pickString(r.category, "") ||
-    pickString(r.kind, "");
+    pickString(r.type, "") || pickString(r.category, "") || pickString(r.kind, "");
 
   return {
     id,
@@ -138,7 +103,6 @@ function normalizeInboxList(payload: unknown): InboxItem[] {
     out.push(item);
   }
 
-  // De-dup by id (keep first)
   const seen = new Set<string>();
   return out.filter((x) => {
     if (seen.has(x.id)) return false;
@@ -191,33 +155,15 @@ function InboxPageInner() {
     setInlineError(null);
     setLoading(true);
 
-    const candidates: string[] = ["/notifications/", "/notifications/inbox/", "/inbox/"];
+    const candidates: string[] = ["/notifications/"];
 
     try {
-      let data: unknown = null;
-      let lastErr: unknown = null;
+      const config: AxiosRequestConfig = { signal: controller.signal };
+      const res = await api.get(candidates[0], config);
 
-      for (const url of candidates) {
-        try {
-          const config: AxiosRequestConfig = { signal: controller.signal };
-          const res = await api.get(url, config);
-          data = res?.data;
-          lastErr = null;
-          break;
-        } catch (e) {
-          lastErr = e;
-          const name = (e as { name?: string })?.name;
-          if (name === "CanceledError" || name === "AbortError") throw e;
-        }
-      }
+      const normalized = normalizeInboxList(res?.data);
 
-      if (lastErr) throw lastErr;
-
-      const normalized = normalizeInboxList(data);
-
-      if (mountedRef.current) {
-        setItems(normalized);
-      }
+      if (mountedRef.current) setItems(normalized);
     } catch (err: unknown) {
       const name = (err as { name?: string })?.name;
       if (name === "CanceledError" || name === "AbortError") return;
@@ -243,17 +189,13 @@ function InboxPageInner() {
     const unread = items.filter((x) => x.read !== true);
 
     try {
-      try {
-        await api.post("/notifications/read-all/");
-        if (mountedRef.current) {
-          setItems((prev) => prev.map((x) => ({ ...x, read: true })));
-        }
-        SuccessToast("All messages marked as read", isDark);
-        return;
-      } catch {
-        // fallback below
+      await api.post("/notifications/read-all/");
+      if (mountedRef.current) {
+        setItems((prev) => prev.map((x) => ({ ...x, read: true })));
       }
-
+      SuccessToast("All messages marked as read", isDark);
+    } catch (err: unknown) {
+      // fallback: best effort mark individually
       for (const msg of unread) {
         try {
           await api.post(`/notifications/${msg.id}/read/`);
@@ -261,7 +203,7 @@ function InboxPageInner() {
           try {
             await api.patch(`/notifications/${msg.id}/`, { read: true });
           } catch {
-            // ignore individual failures
+            // ignore
           }
         }
       }
@@ -270,10 +212,6 @@ function InboxPageInner() {
         setItems((prev) => prev.map((x) => ({ ...x, read: true })));
       }
       SuccessToast("All messages marked as read", isDark);
-    } catch (err: unknown) {
-      const msg = getAxiosMessage(err, "Could not mark all as read");
-      ErrorToast(msg, isDark);
-      if (mountedRef.current) setInlineError(msg);
     } finally {
       if (mountedRef.current) setBusy(false);
     }
@@ -353,64 +291,6 @@ function InboxPageInner() {
             </button>
           </div>
         </header>
-
-        <section className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-4 sm:p-5 space-y-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search messages..."
-              className="w-full sm:max-w-md px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60"
-            />
-
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Total{" "}
-                <span className="font-semibold text-gray-900 dark:text-gray-100">{items.length}</span>{" "}
-                • Unread{" "}
-                <span className="font-semibold text-gray-900 dark:text-gray-100">{unreadCount}</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setTab("all")}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${
-                tab === "all"
-                  ? "bg-violet-600 text-white border-violet-600"
-                  : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
-              }`}
-            >
-              All
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTab("unread")}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${
-                tab === "unread"
-                  ? "bg-violet-600 text-white border-violet-600"
-                  : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
-              }`}
-            >
-              Unread
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setTab("read")}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60 ${
-                tab === "read"
-                  ? "bg-violet-600 text-white border-violet-600"
-                  : "bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
-              }`}
-            >
-              Read
-            </button>
-          </div>
-        </section>
 
         {inlineError ? (
           <div
