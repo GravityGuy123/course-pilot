@@ -459,3 +459,36 @@ export type PaymentRequiredPayload = {
   amount_due: number;
   next_action: "INITIATE_PAYMENT";
 };
+
+export type PlanInfo = {
+  name: string;
+  status?: string; // active/canceled/trialing/etc
+  renews_at?: string | null;
+  amount?: number | null;
+  currency?: string;
+};
+
+export type InvoiceRow = {
+  id: string;
+  created_at?: string;
+  amount?: number | null;
+  currency?: string;
+  status?: string;
+  receipt_url?: string;
+  description?: string;
+};
+
+export type ApiErrorPayload = {
+  detail?: string;
+  message?: string;
+  error?: string;
+};
+
+export type InboxItem = {
+  id: string;
+  title: string;
+  message: string;
+  created_at?: string;
+  read?: boolean;
+  type?: string;
+};

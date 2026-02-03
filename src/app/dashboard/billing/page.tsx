@@ -17,6 +17,7 @@ import { api } from "@/lib/axios.config";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 import { Spinner } from "@/components/ui/spinner";
 import { ErrorToast } from "@/lib/toast";
+import { InvoiceRow, PlanInfo } from "@/lib/types";
 
 type ApiErrorPayload = {
   detail?: string;
@@ -57,24 +58,6 @@ function fmtDate(value?: string) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? value : d.toLocaleString();
 }
-
-type PlanInfo = {
-  name: string;
-  status?: string; // active/canceled/trialing/etc
-  renews_at?: string | null;
-  amount?: number | null;
-  currency?: string;
-};
-
-type InvoiceRow = {
-  id: string;
-  created_at?: string;
-  amount?: number | null;
-  currency?: string;
-  status?: string;
-  receipt_url?: string;
-  description?: string;
-};
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;

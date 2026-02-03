@@ -1,4 +1,3 @@
-// src/app/dashboard/inbox/page.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -10,12 +9,7 @@ import { api } from "@/lib/axios.config";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 import { Spinner } from "@/components/ui/spinner";
 import { ErrorToast, SuccessToast } from "@/lib/toast";
-
-type ApiErrorPayload = {
-  detail?: string;
-  message?: string;
-  error?: string;
-};
+import type { ApiErrorPayload, InboxItem } from "@/lib/types";
 
 function getAxiosMessage(err: unknown, fallback: string): string {
   const axiosErr = err as AxiosError<ApiErrorPayload>;
@@ -27,15 +21,6 @@ function getAxiosMessage(err: unknown, fallback: string): string {
     fallback
   );
 }
-
-type InboxItem = {
-  id: string;
-  title: string;
-  message: string;
-  created_at?: string;
-  read?: boolean;
-  type?: string;
-};
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null;
@@ -49,13 +34,57 @@ function pickBoolean(v: unknown): boolean | undefined {
   return typeof v === "boolean" ? v : undefined;
 }
 
-function normalizeInboxItem(raw: unknown, idFallback: string): InboxItem {
+/**
+ * Strict UUID check without regex:
+ * - 36 chars
+ * - 5 parts: 8-4-4-4-12
+ * - hex only
+ */
+function isUuid(v: string): boolean {
+  const s = (v || "").trim();
+  if (s.length !== 36) return false;
+
+  const parts = s.split("-");
+  if (parts.length !== 5) return false;
+
+  const sizes = [8, 4, 4, 4, 12];
+  for (let i = 0; i < 5; i += 1) {
+    const p = parts[i];
+    if (p.length !== sizes[i]) return false;
+
+    // hex-only
+    for (let j = 0; j < p.length; j += 1) {
+      const c = p[j];
+      const isHex =
+        (c >= "0" && c <= "9") ||
+        (c >= "a" && c <= "f") ||
+        (c >= "A" && c <= "F");
+      if (!isHex) return false;
+    }
+  }
+
+  return true;
+}
+
+function normalizeInboxItem(raw: unknown): InboxItem | null {
   const r = isRecord(raw) ? raw : {};
 
-  const id = pickString(r.id, idFallback) || idFallback;
+  // ✅ IMPORTANT: support common backend keys for UUID
+  const candidateId =
+    pickString(r.id, "") ||
+    pickString(r.notification_id, "") ||
+    pickString(r.notificationId, "");
+
+  const id = candidateId.trim();
+
+  // ✅ Do NOT create fake ids. If we can't find a real UUID, skip item.
+  if (!id || !isUuid(id)) return null;
+
   const title = pickString(r.title, "Message");
   const message =
-    pickString(r.message, "") || pickString(r.body, "") || pickString(r.content, "");
+    pickString(r.message, "") ||
+    pickString(r.body, "") ||
+    pickString(r.content, "");
 
   const created_at =
     pickString(r.created_at, "") ||
@@ -63,10 +92,17 @@ function normalizeInboxItem(raw: unknown, idFallback: string): InboxItem {
     pickString(r.created, "") ||
     "";
 
-  const read = pickBoolean(r.read) ?? pickBoolean(r.is_read) ?? pickBoolean(r.isRead);
+  const read =
+    pickBoolean(r.read) ??
+    pickBoolean(r.is_read) ??
+    pickBoolean(r.isRead) ??
+    (typeof r.is_read === "boolean" ? r.is_read : undefined) ??
+    (typeof r.isRead === "boolean" ? r.isRead : undefined);
 
   const type =
-    pickString(r.type, "") || pickString(r.category, "") || pickString(r.kind, "");
+    pickString(r.type, "") ||
+    pickString(r.category, "") ||
+    pickString(r.kind, "");
 
   return {
     id,
@@ -79,9 +115,6 @@ function normalizeInboxItem(raw: unknown, idFallback: string): InboxItem {
 }
 
 function normalizeInboxList(payload: unknown): InboxItem[] {
-  // Accept: []
-  // Accept: { results: [] } / { data: [] } / { items: [] } / { notifications: [] }
-  // Accept: { inbox: [] }
   const root = isRecord(payload) ? payload : {};
   const listRaw = Array.isArray(payload)
     ? payload
@@ -100,14 +133,8 @@ function normalizeInboxList(payload: unknown): InboxItem[] {
   const out: InboxItem[] = [];
 
   for (let i = 0; i < listRaw.length; i += 1) {
-    const raw = listRaw[i];
-    const fallbackId = String(i + 1);
-    const item = normalizeInboxItem(raw, fallbackId);
-
-    // Ensure we don't keep "fake" ids if payload actually had none.
-    // If id looks like our fallback and there is no title/message, skip.
-    if (!item.id || (!item.title && !item.message)) continue;
-
+    const item = normalizeInboxItem(listRaw[i]);
+    if (!item) continue;
     out.push(item);
   }
 
@@ -164,12 +191,7 @@ function InboxPageInner() {
     setInlineError(null);
     setLoading(true);
 
-    // Try common list endpoints; first successful wins.
-    const candidates: string[] = [
-      "/notifications/",
-      "/notifications/inbox/",
-      "/inbox/",
-    ];
+    const candidates: string[] = ["/notifications/", "/notifications/inbox/", "/inbox/"];
 
     try {
       let data: unknown = null;
@@ -218,11 +240,9 @@ function InboxPageInner() {
     setBusy(true);
     setInlineError(null);
 
-    // Only attempt for unread items
     const unread = items.filter((x) => x.read !== true);
 
     try {
-      // Try a bulk endpoint first (if your backend has it)
       try {
         await api.post("/notifications/read-all/");
         if (mountedRef.current) {
@@ -231,7 +251,7 @@ function InboxPageInner() {
         SuccessToast("All messages marked as read", isDark);
         return;
       } catch {
-        // Fallback: mark individually (best-effort)
+        // fallback below
       }
 
       for (const msg of unread) {
@@ -289,18 +309,13 @@ function InboxPageInner() {
       const a = (x.title || "").toLowerCase();
       const b = (x.message || "").toLowerCase();
       const c = (x.type || "").toLowerCase();
-      return (
-        a.includes(normalizedQuery) ||
-        b.includes(normalizedQuery) ||
-        c.includes(normalizedQuery)
-      );
+      return a.includes(normalizedQuery) || b.includes(normalizedQuery) || c.includes(normalizedQuery);
     });
   }, [items, normalizedQuery, tab]);
 
   return (
     <main className="min-h-[calc(100vh-4rem)] px-3 sm:px-6 lg:px-8 py-5 sm:py-6">
       <div className="mx-auto w-full max-w-6xl space-y-4 sm:space-y-5">
-        {/* Header */}
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1 min-w-0">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -332,7 +347,6 @@ function InboxPageInner() {
               type="button"
               onClick={markAllRead}
               disabled={busy || loading || unreadCount === 0}
-              // aria-disabled={busy || loading || unreadCount === 0}
               className="inline-flex w-full sm:w-auto items-center justify-center rounded-lg bg-violet-600 px-3 py-2 text-sm font-semibold text-white hover:bg-violet-700 active:bg-violet-800 transition disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60"
             >
               {busy ? "Working..." : "Mark all read"}
@@ -340,7 +354,6 @@ function InboxPageInner() {
           </div>
         </header>
 
-        {/* Controls */}
         <section className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm p-4 sm:p-5 space-y-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <input
@@ -353,13 +366,9 @@ function InboxPageInner() {
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 Total{" "}
-                <span className="font-semibold text-gray-900 dark:text-gray-100">
-                  {items.length}
-                </span>{" "}
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{items.length}</span>{" "}
                 • Unread{" "}
-                <span className="font-semibold text-gray-900 dark:text-gray-100">
-                  {unreadCount}
-                </span>
+                <span className="font-semibold text-gray-900 dark:text-gray-100">{unreadCount}</span>
               </span>
             </div>
           </div>
@@ -403,7 +412,6 @@ function InboxPageInner() {
           </div>
         </section>
 
-        {/* Inline error */}
         {inlineError ? (
           <div
             role="alert"
@@ -413,7 +421,6 @@ function InboxPageInner() {
           </div>
         ) : null}
 
-        {/* List */}
         <section className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
           {loading ? (
             <div className="p-10 flex items-center justify-center">

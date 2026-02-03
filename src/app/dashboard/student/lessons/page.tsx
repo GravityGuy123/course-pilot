@@ -11,12 +11,8 @@ import { api } from "@/lib/axios.config";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 import { Spinner } from "@/components/ui/spinner";
 import { ErrorToast } from "@/lib/toast";
+import { ApiErrorPayload } from "@/lib/types";
 
-type ApiErrorPayload = {
-  detail?: string;
-  message?: string;
-  error?: string;
-};
 
 function getAxiosMessage(err: unknown, fallback: string): string {
   const axiosErr = err as AxiosError<ApiErrorPayload>;

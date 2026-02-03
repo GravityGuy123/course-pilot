@@ -54,9 +54,26 @@ function pickBoolean(v: unknown): boolean | undefined {
 }
 
 function normalizeInboxItem(raw: unknown, idFallback: string): InboxItem {
-  const r = isRecord(raw) ? raw : {};
+  // Some APIs return { data: {...} } or { results: [...] }
+  const unwrapped = (() => {
+    if (!isRecord(raw)) return raw;
 
-  const id = pickString(r.id, idFallback);
+    const data = raw.data;
+    if (isRecord(data)) return data;
+
+    const result = raw.result;
+    if (isRecord(result)) return result;
+
+    // if results is an array and we're fetching by id, some APIs still return list
+    const results = raw.results;
+    if (Array.isArray(results) && results.length > 0) return results[0];
+
+    return raw;
+  })();
+
+  const r = isRecord(unwrapped) ? unwrapped : {};
+
+  const id = pickString(r.id, idFallback) || idFallback;
   const title = pickString(r.title, "Message");
   const message =
     pickString(r.message, "") ||
@@ -72,7 +89,9 @@ function normalizeInboxItem(raw: unknown, idFallback: string): InboxItem {
   const read =
     pickBoolean(r.read) ??
     pickBoolean(r.is_read) ??
-    pickBoolean(r.isRead);
+    pickBoolean(r.isRead) ??
+    (typeof r.is_read === "boolean" ? r.is_read : undefined) ??
+    (typeof r.isRead === "boolean" ? r.isRead : undefined);
 
   const type =
     pickString(r.type, "") ||
@@ -89,6 +108,32 @@ function normalizeInboxItem(raw: unknown, idFallback: string): InboxItem {
   };
 }
 
+function isAbortError(err: unknown): boolean {
+  const anyErr = err as { name?: string; code?: string; message?: string };
+  return (
+    anyErr?.name === "CanceledError" ||
+    anyErr?.name === "AbortError" ||
+    anyErr?.code === "ERR_CANCELED"
+  );
+}
+
+function withTimeoutSignal(
+  controller: AbortController,
+  ms: number,
+  reason = "Request timed out"
+) {
+  const t = window.setTimeout(() => {
+    // AbortController.abort accepts optional reason in modern runtimes
+    try {
+      controller.abort(reason);
+    } catch {
+      controller.abort();
+    }
+  }, ms);
+
+  return () => window.clearTimeout(t);
+}
+
 export default function InboxMessagePage({ params }: PageProps) {
   return (
     <ProtectedRoute>
@@ -100,7 +145,13 @@ export default function InboxMessagePage({ params }: PageProps) {
 function InboxMessagePageInner({ id }: { id: string }) {
   const router = useRouter();
   const { theme } = useTheme();
+
   const isDark = useMemo(() => theme === "dark", [theme]);
+  const isDarkRef = useRef(false);
+
+  useEffect(() => {
+    isDarkRef.current = theme === "dark";
+  }, [theme]);
 
   const [loading, setLoading] = useState(true);
   const [item, setItem] = useState<InboxItem | null>(null);
@@ -113,30 +164,40 @@ function InboxMessagePageInner({ id }: { id: string }) {
   const displayDate = useMemo(() => {
     if (!item?.created_at) return "";
     const d = new Date(item.created_at);
-    return Number.isNaN(d.getTime())
-      ? item.created_at
-      : d.toLocaleString();
+    return Number.isNaN(d.getTime()) ? item.created_at : d.toLocaleString();
   }, [item?.created_at]);
 
-  const canMarkRead = useMemo(
-    () => Boolean(item) && !busy && item?.read !== true,
-    [busy, item]
-  );
+  const canMarkRead = useMemo(() => {
+    if (!item) return false;
+    if (busy) return false;
+    return item.read !== true;
+  }, [busy, item]);
 
   const fetchItem = useCallback(async () => {
-    if (!id) return;
+    const safeId = (id || "").trim();
+
+    // Always settle loading state even if id is missing
+    setInlineError(null);
+    setLoading(true);
+
+    if (!safeId) {
+      setItem(null);
+      setInlineError("Missing message id");
+      setLoading(false);
+      return;
+    }
 
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setInlineError(null);
-    setLoading(true);
+    // Hard timeout so spinner never spins forever
+    const clearTimeoutFn = withTimeoutSignal(controller, 15000);
 
     const candidates = [
-      `/notifications/${id}/`,
-      `/notifications/inbox/${id}/`,
-      `/inbox/${id}/`,
+      `/notifications/${safeId}/`,
+      `/notifications/inbox/${safeId}/`,
+      `/inbox/${safeId}/`,
     ];
 
     try {
@@ -147,64 +208,90 @@ function InboxMessagePageInner({ id }: { id: string }) {
         try {
           const config: AxiosRequestConfig = {
             signal: controller.signal,
+            // If your axios version supports it, keep a network timeout too:
+            timeout: 15000,
           };
+
           const res = await api.get(url, config);
           data = res?.data;
           lastErr = null;
           break;
         } catch (e) {
           lastErr = e;
-          const name = (e as { name?: string })?.name;
-          if (name === "CanceledError" || name === "AbortError") {
-            throw e;
-          }
+          if (isAbortError(e)) throw e;
         }
       }
 
       if (lastErr) throw lastErr;
 
       if (mountedRef.current) {
-        setItem(normalizeInboxItem(data, id));
+        setItem(normalizeInboxItem(data, safeId));
       }
     } catch (err: unknown) {
-      const name = (err as { name?: string })?.name;
-      if (name === "CanceledError" || name === "AbortError") return;
+      if (isAbortError(err)) {
+        // If we aborted due to timeout, show a useful message once
+        const msg = getAxiosMessage(err, "Request canceled");
+        if (mountedRef.current) {
+          setItem(null);
+          setInlineError(
+            msg.toLowerCase().includes("timed out")
+              ? "Request timed out. Please try again."
+              : msg
+          );
+          ErrorToast(
+            msg.toLowerCase().includes("timed out")
+              ? "Request timed out. Please try again."
+              : msg,
+            isDarkRef.current
+          );
+        }
+        return;
+      }
 
       const msg = getAxiosMessage(err, "Failed to load message");
-      ErrorToast(msg, isDark);
-
       if (mountedRef.current) {
         setItem(null);
         setInlineError(msg);
+        ErrorToast(msg, isDarkRef.current);
       }
     } finally {
+      clearTimeoutFn();
       if (mountedRef.current) setLoading(false);
     }
-  }, [id, isDark]);
+  }, [id]);
 
   const markAsRead = useCallback(async () => {
-    if (!item || busy || item.read === true) return;
+    const current = item;
+    if (!current) return;
+    if (busy) return;
+    if (current.read === true) return;
 
     setBusy(true);
     setInlineError(null);
 
     try {
+      // Prefer explicit endpoint
       try {
-        await api.post(`/notifications/${item.id}/read/`);
+        await api.post(`/notifications/${current.id}/read/`);
       } catch {
-        await api.patch(`/notifications/${item.id}/`, { read: true });
+        // Fallback
+        await api.patch(`/notifications/${current.id}/`, { read: true });
       }
 
-      setItem((prev) => (prev ? { ...prev, read: true } : prev));
-      SuccessToast("Marked as read", isDark);
+      if (mountedRef.current) {
+        setItem((prev) => (prev ? { ...prev, read: true } : prev));
+      }
+      SuccessToast("Marked as read", isDarkRef.current);
     } catch (err: unknown) {
+      if (isAbortError(err)) return;
+
       const msg = getAxiosMessage(err, "Could not mark as read");
-      ErrorToast(msg, isDark);
-      setInlineError(msg);
+      if (mountedRef.current) setInlineError(msg);
+      ErrorToast(msg, isDarkRef.current);
     } finally {
-      setBusy(false);
+      if (mountedRef.current) setBusy(false);
     }
-  }, [busy, isDark, item]);
+  }, [busy, item]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -271,7 +358,10 @@ function InboxMessagePageInner({ id }: { id: string }) {
         </header>
 
         {inlineError ? (
-          <div className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 px-4 py-3 text-sm text-red-800 dark:text-red-200">
+          <div
+            role="alert"
+            className="rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50 dark:bg-red-900/10 px-4 py-3 text-sm text-red-800 dark:text-red-200"
+          >
             {inlineError}
           </div>
         ) : null}
@@ -288,14 +378,23 @@ function InboxMessagePageInner({ id }: { id: string }) {
                 Message not found
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                This message may have been deleted, or your endpoint path differs.
+                This message may have been deleted, the endpoint path differs, or
+                the request timed out.
               </p>
             </div>
           ) : (
-            <div className="p-4 sm:p-7 space-y-5">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 wrap-break-word">
-                {item.title}
-              </h1>
+            <div className="p-4 sm:p-7 space-y-4">
+              <div className="space-y-1">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 wrap-break-word">
+                  {item.title}
+                </h1>
+
+                {displayDate ? (
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {displayDate}
+                  </p>
+                ) : null}
+              </div>
 
               <div className="prose prose-sm sm:prose-base dark:prose-invert max-w-none">
                 <p className="whitespace-pre-wrap wrap-break-word text-gray-800 dark:text-gray-100">

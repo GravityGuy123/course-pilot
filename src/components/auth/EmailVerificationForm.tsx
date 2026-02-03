@@ -96,7 +96,7 @@ export default function EmailVerificationForm({ email, onVerified }: Props) {
     safeSetStatus(null);
 
     try {
-      const res = await authApi.post("/email/send-code", { email: emailDisplay });
+      const res = await authApi.post("/email/send-code/", { email: emailDisplay });
 
       if (res.status === 201) {
         safeSetStatus({ kind: "success", text: "Verification code sent to your email" });
@@ -129,7 +129,7 @@ export default function EmailVerificationForm({ email, onVerified }: Props) {
     safeSetStatus(null);
 
     try {
-      const res = await authApi.post("/email/verify", { email: emailDisplay, code: cleaned });
+      const res = await authApi.post("/email/verify/", { email: emailDisplay, code: cleaned });
 
       if (res.status === 200) {
         safeSetStatus({ kind: "success", text: "Email verified successfully!" });

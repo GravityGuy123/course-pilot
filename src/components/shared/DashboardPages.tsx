@@ -97,7 +97,7 @@ export default function DashboardPages({ onLinkClick }: PagesProps) {
                 "group flex items-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/60",
                 isActive
-                  ? "bg-violet-400 text-white dark:bg-violet-600 dark:text-white"
+                  ? "text-emerald-500 dark:text-white"
                   : "text-violet-400 hover:bg-violet-100 dark:text-gray-300 dark:hover:bg-violet-700"
               )}
             >
@@ -106,7 +106,7 @@ export default function DashboardPages({ onLinkClick }: PagesProps) {
                 className={cx(
                   "h-2 w-2 rounded-full transition",
                   isActive
-                    ? "bg-emerald-500"
+                    ? "bg-emerald-500 dark:bg-emerald-500-"
                     : "bg-transparent group-hover:bg-emerald-400/50"
                 )}
                 aria-hidden="true"
@@ -116,7 +116,7 @@ export default function DashboardPages({ onLinkClick }: PagesProps) {
               <Icon
                 className={cx(
                   "h-5 w-5 transition",
-                  isActive ? "text-white" : "text-violet-400 dark:text-gray-300"
+                  isActive ? "text-emerald-400 dark:text-emerald-500" : "text-violet-400 dark:text-gray-300"
                 )}
                 aria-hidden="true"
               />
