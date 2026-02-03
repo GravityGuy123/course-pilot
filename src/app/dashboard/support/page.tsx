@@ -438,7 +438,7 @@ function SupportPageInner() {
               </div>
 
               {/* Footer note */}
-              <div className="mt-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40 p-4">
+              {/* <div className="mt-5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/40 p-4">
                 <div className="flex items-start gap-3">
                   <ExternalLink className="h-5 w-5 text-violet-600 dark:text-violet-400 mt-0.5" />
                   <div className="min-w-0">
@@ -456,7 +456,8 @@ function SupportPageInner() {
                     </p>
                   </div>
                 </div>
-              </div>
+              </div> */}
+
             </div>
           </div>
         </section>
