@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, Column } from "../shared/DataTable";
+import { DataTable, Column } from "../../shared/DataTable";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { api } from "@/lib/axios.config";
@@ -47,11 +47,18 @@ export function TutorDashboardStudentsTab() {
       render: (item: Student) => (
         <div className="flex items-center gap-2 min-w-[150px]">
           <Avatar className="h-8 w-8">
-            <AvatarFallback>{item.name.split(" ").map((n) => n[0]).join("")}</AvatarFallback>
+            <AvatarFallback>
+              {item.name
+                .split(" ")
+                .map((n) => n[0])
+                .join("")}
+            </AvatarFallback>
           </Avatar>
           <div className="truncate">
             <p className="font-medium text-sm truncate">{item.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{item.email}</p>
+            <p className="text-xs text-muted-foreground truncate">
+              {item.email}
+            </p>
           </div>
         </div>
       ),
@@ -60,7 +67,9 @@ export function TutorDashboardStudentsTab() {
       key: "course",
       label: "Course",
       sortable: true,
-      render: (item: Student) => <p className="truncate max-w-[120px]">{item.course}</p>,
+      render: (item: Student) => (
+        <p className="truncate max-w-[120px]">{item.course}</p>
+      ),
     },
     {
       key: "progress",
@@ -86,7 +95,8 @@ export function TutorDashboardStudentsTab() {
     );
 
   if (error) return <p className="text-center mt-6 text-red-500">{error}</p>;
-  if (students.length === 0) return <p className="text-center mt-6">No students enrolled yet.</p>;
+  if (students.length === 0)
+    return <p className="text-center mt-6">No students enrolled yet.</p>;
 
   return (
     <Card className="dark:bg-gray-800 overflow-x-auto">

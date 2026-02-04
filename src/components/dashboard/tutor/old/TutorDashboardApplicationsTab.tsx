@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
-import { DataTable, type Column } from "../shared/DataTable";
-import { Application } from "@/components/dashboard/tutor/mockData";
+import { DataTable, type Column } from "../../shared/DataTable";
+import { Application } from "@/components/dashboard/tutor/old/mockData";
 import { cn } from "@/lib/utils";
 
 const statusAccent = {

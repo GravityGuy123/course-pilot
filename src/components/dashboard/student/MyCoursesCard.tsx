@@ -22,7 +22,7 @@ export default function MyCoursesCard({
   enrollments: MyEnrollment[];
 }) {
   return (
-    <div className="mt-6 rounded-2xl border bg-card p-4 sm:p-6 bg-white dark:bg-gray-800">
+    <div className="mt-6 rounded-2xl border p-4 sm:p-6 bg-white dark:bg-gray-800">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-lg font-semibold text-foreground">My courses</h2>
@@ -33,7 +33,7 @@ export default function MyCoursesCard({
 
         <Link
           href="/dashboard/student/lessons"
-          className="text-white bg-violet-600 hover:bg-violet-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 hidden items-center gap-2 rounded-xl border bg-card px-4 py-2 text-sm font-medium text-foreground- shadow-sm transition hover:bg-muted- sm:inline-flex"
+          className="text-white bg-violet-600 hover:bg-violet-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 hidden items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium text-foreground- shadow-sm transition hover:bg-muted- sm:inline-flex"
         >
           View lessons
           <ChevronRight className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function MyCoursesCard({
               action={
                 <Link
                   href="/courses"
-                  className="text-violet-600 dark:text-indigo-500 dark:bg-primary bg-white hover:bg-violet-50 dark:hover:bg-violet-600 dark:hover:text-white inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
+                  className="text-violet-600 dark:text-indigo-500 dark:bg-primary bg-white hover:bg-violet-50 dark:hover:bg-violet-600 dark:hover:text-white inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold shadow-sm transition hover:opacity-95"
                 >
                   Browse Courses
                   <ChevronRight className="h-4 w-4" />
@@ -139,7 +139,7 @@ export default function MyCoursesCard({
       <div className="mt-4 sm:hidden">
         <Link
           href="/dashboard/student/lessons"
-          className="text-white bg-violet-600 hover:bg-violet-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 inline-flex w-full items-center justify-center gap-2 rounded-xl border bg-card px-4 py-2 text-sm font-medium shadow-sm transition"
+          className="text-white bg-violet-600 hover:bg-violet-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium shadow-sm transition"
         >
           View lessons
           <ChevronRight className="h-4 w-4" />

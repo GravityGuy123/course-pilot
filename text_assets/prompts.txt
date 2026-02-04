@@ -1,6 +1,6 @@
 I prefer my prompts to be in a single enclosed block with a copy button for easy coping.
 Strictly ensure to generate it within a single enclosed block with a copy button for easy coping.
-Production grade, scalable, super responsive across all possible screen sizes while maintaining the existing color scheme.
+It needs to be Production grade, scalable, super responsive across all possible screen sizes while maintaining the existing color scheme.
 
 
 PROMPT 1:

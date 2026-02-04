@@ -5,15 +5,18 @@ import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/context/auth-context";
 
-
-import { TutorDashboardHeader } from "@/components/dashboard/tutor/TutorDashboardHeader";
-import { TutorDashboardStats } from "@/components/dashboard/tutor/TutorDashboardStats";
-import { TutorDashboardApplicationsTab } from "@/components/dashboard/tutor/TutorDashboardApplicationsTab";
-import { TutorDashboardEarningsTab } from "@/components/dashboard/tutor/TutorDashboardEarningsTab";
-import { TutorDashboardStudentsTab } from "@/components/dashboard/tutor/TutorDashboardStudentsTab";
+import TutorDashboardCoursesTab from "@/components/dashboard/tutor/old/TutorDashboardCoursesTab";
+import {
+  mockCourses,
+  mockStudents,
+  mockApplications,
+} from "@/components/dashboard/tutor/old/mockData";
+import { TutorDashboardHeader } from "@/components/dashboard/tutor/old/TutorDashboardHeader";
+import { TutorDashboardStats } from "@/components/dashboard/tutor/old/TutorDashboardStats";
+import { TutorDashboardStudentsTab } from "@/components/dashboard/tutor/old/TutorDashboardStudentsTab";
+import { TutorDashboardApplicationsTab } from "@/components/dashboard/tutor/old/TutorDashboardApplicationsTab";
+import { TutorDashboardEarningsTab } from "@/components/dashboard/tutor/old/TutorDashboardEarningsTab";
 import DashboardRoleApplication from "@/components/dashboard/shared/DashboardRoleApplication";
-import TutorDashboardCoursesTab from "@/components/dashboard/tutor/TutorDashboardCoursesTab";
-import { mockCourses, mockStudents, mockApplications } from "@/components/dashboard/tutor/mockData";
 
 export default function TutorDashboardPage() {
   const router = useRouter();

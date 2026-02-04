@@ -41,18 +41,18 @@ export function AppSidebar() {
 
   return (
     <>
-      {/* 🌐 Mobile hamburger (LEFT SIMPLE ON PURPOSE) */}
-      <div className="md:hidden p-4 relative z-50">
+      {/* 🌐 Mobile hamburger */}
+      <div className="md:hidden px-3 pt-3 sm:px-4 sm:pt-4 relative z-50">
         <button
           ref={openButtonRef}
           type="button"
           onClick={openMenu}
-          className="p-2 rounded text-violet-500 dark:text-indigo-300 hover:bg-violet-100 dark:hover:bg-violet-700 transition"
+          className="inline-flex items-center justify-center rounded-lg p-2 text-violet-500 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-indigo-300 dark:hover:bg-violet-700/30 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
           aria-label="Open menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="w-7 h-7"
+            className="h-6 w-6 sm:h-7 sm:w-7"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -71,7 +71,7 @@ export function AppSidebar() {
       {/* 🖥 Desktop sidebar */}
       <div className="hidden md:block">
         <Sidebar className="bg-gray-50 dark:bg-gray-800">
-          <SidebarContent className="dark:bg-gray-800 overflow-y-auto">
+          <SidebarContent className="overflow-y-auto dark:bg-gray-800">
             <LogoContent />
             <Pages />
             <DashboardPages />
@@ -88,11 +88,16 @@ export function AppSidebar() {
         aria-modal="true"
         aria-label="Sidebar navigation"
         className={[
-          "fixed inset-y-0 left-0 z-70 md:hidden",
-          "w-[80vw] max-w-88 sm:w-[60vw] sm:max-w-[24rem] md:w-1/2",
+          "fixed inset-y-0 left-0 md:hidden",
+          "z-70",
+          // better width scaling on tiny → big phones/tablets
+          "w-[88vw] max-w-[22rem] sm:w-[70vw] sm:max-w-[26rem]",
           "bg-gray-50 dark:bg-gray-800 shadow-xl",
-          "transform transition-transform duration-300 ease-in-out",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
+          "transform transition-transform duration-300 ease-in-out will-change-transform",
+          // prevent hidden drawer from blocking clicks
+          isMobileMenuOpen
+            ? "translate-x-0 pointer-events-auto"
+            : "-translate-x-full pointer-events-none",
         ].join(" ")}
       >
         {/* ❌ Close button */}
@@ -100,12 +105,12 @@ export function AppSidebar() {
           ref={closeButtonRef}
           type="button"
           onClick={closeMenu}
-          className="absolute right-4 top-4 inline-flex items-center justify-center rounded-md p-2 text-violet-700 hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 dark:text-indigo-300 dark:hover:bg-violet-700/30 dark:focus-visible:ring-offset-gray-900 transition"
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 inline-flex items-center justify-center rounded-lg p-2 text-violet-700 hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-50 dark:text-indigo-300 dark:hover:bg-violet-700/30 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900 transition"
           aria-label="Close menu"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-7 w-7"
+            className="h-6 w-6 sm:h-7 sm:w-7"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -121,7 +126,15 @@ export function AppSidebar() {
         </button>
 
         {/* Content */}
-        <div className="flex min-h-full flex-col overflow-y-auto px-5 pb-6 pt-16 sm:px-6">
+        <div
+          className={[
+            "flex min-h-full flex-col overflow-y-auto overscroll-contain",
+            // safe-area friendly padding (notches / gesture bars)
+            "px-4 sm:px-6",
+            "pt-[max(4rem,env(safe-area-inset-top))]",
+            "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          ].join(" ")}
+        >
           <div className="space-y-6">
             <LogoContent />
             <Pages onLinkClick={closeMenu} />
@@ -137,7 +150,8 @@ export function AppSidebar() {
       {/* 🌑 Overlay */}
       <div
         className={[
-          "fixed inset-0 z-60 md:hidden bg-black/40 transition-opacity duration-300",
+          "fixed inset-0 md:hidden bg-black/40 transition-opacity duration-300",
+          "z-60",
           isMobileMenuOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none",

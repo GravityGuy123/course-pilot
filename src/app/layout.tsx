@@ -1,6 +1,8 @@
+import type { Metadata, Viewport } from "next";
 import { ReactNode } from "react";
-import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
+
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -10,95 +12,101 @@ import Footer from "@/components/shared/Footer";
 import { AuthProvider } from "@/context/auth-context";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
-import RightSidebar from "@/components/shared/RightSidebar";
-import AppToaster from "@/components/shared/AppToaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "CoursePilot - Your Digital Learning Hub",
-  description:
-    "CoursePilot is a comprehensive digital learning platform offering online courses, tutorials, and mentorship programs to help you acquire new skills anytime, anywhere.",
+// 🌍 Site URL (env-safe)
+const SITE_URL =
+  (process.env.NEXT_PUBLIC_SITE_URL || "https://course-pilot.com").trim();
 
-  // Standard meta tags
-  keywords: [
-    "E-Learning",
-    "Online Courses",
-    "Digital Learning",
-    "Skill Development",
-    "Mentorship",
-    "CoursePilot",
-    "Tutorials",
-    "Education Platform",
-    "Learning Online",
+// 👤 AUTHOR IDENTITY (single source of truth)
+const AUTHOR_NAME = "Ejidike Simon";
+const AUTHOR_URL = SITE_URL; // personal site later if you want
+const AUTHOR_TWITTER = "@GravityGuy123"; // optional
+
+const AUTHOR_GITHUB = "https://github.com/GravityGuy123";
+const AUTHOR_LINKEDIN = "https://www.linkedin.com/in/ejidike-simon"; // change if needed
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#7c3aed" },
+    { media: "(prefers-color-scheme: dark)", color: "#4f46e5" },
   ],
-  authors: [{ name: "CoursePilot Team", url: "https://course-pilot.com" }],
-  creator: "CoursePilot Team",
-  publisher: "CoursePilot Inc.",
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+
+  title: {
+    default: "CoursePilot – Learn Skills That Matter",
+    template: "%s | CoursePilot",
+  },
+
+  description:
+    "CoursePilot is a modern digital learning platform built by Ejidike Simon, offering structured online courses, mentorship, and skill-focused learning experiences.",
+
   applicationName: "CoursePilot",
   category: "Education",
+
+  keywords: [
+    "CoursePilot",
+    "Online Learning Platform",
+    "E-Learning",
+    "Skill Development",
+    "Mentorship",
+    "Online Courses",
+    "Learn Tech Skills",
+    "Education Platform",
+    "Ejidike Simon",
+    "Ejidike Ifeanyi",
+    "Ejidike Ifeanyi Simon",
+    "Built by Ejidike Simon",
+    "Built by Ejidike Ifeanyi",
+    "Ejidike Simon GitHub",
+    "Ejidike Ifeanyi GitHub",
+  ],
+
+  authors: [
+    {
+      name: AUTHOR_NAME,
+      url: AUTHOR_URL,
+    },
+  ],
+
+  creator: AUTHOR_NAME,
+  publisher: AUTHOR_NAME,
+
+  alternates: {
+    canonical: SITE_URL,
+    languages: {
+      "en-US": SITE_URL,
+      "fr-FR": `${SITE_URL}/fr`,
+      "es-ES": `${SITE_URL}/es`,
+    },
+  },
+
   formatDetection: {
-    email: true,
-    address: true,
-    telephone: true,
+    email: false,
+    address: false,
+    telephone: false,
   },
 
-  // Verification tags
-  verification: {
-    google: "google-site-verification-code",
-  },
-
-  // Open Graph / Facebook
-  openGraph: {
-    title: "CoursePilot - Your Digital Learning Hub",
-    description:
-      "Learn anytime, anywhere with online courses, tutorials, and mentorship programs from CoursePilot.",
-    url: "https://course-pilot.com",
-    siteName: "CoursePilot",
-    type: "website",
-    images: [
-      {
-        url: "https://course-pilot.com/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "CoursePilot Platform Preview",
-      },
-    ],
-  },
-
-  // Twitter Card
-  twitter: {
-    card: "summary_large_image",
-    title: "CoursePilot - Your Digital Learning Hub",
-    description:
-      "Learn anytime, anywhere with online courses, tutorials, and mentorship programs from CoursePilot.",
-    creator: "@CoursePilot",
-    images: ["https://course-pilot.com/twitter-card.png"],
-  },
-
-  // Icons
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
-    apple: "/apple-touch-icon.png",
-  },
-
-  // Manifest
-  manifest: "/site.webmanifest",
-
-  // Robots
   robots: {
     index: true,
     follow: true,
-    nocache: false,
     googleBot: {
       index: true,
       follow: true,
@@ -108,51 +116,138 @@ export const metadata: Metadata = {
     },
   },
 
-  // Language
-  alternates: {
-    canonical: "https://course-pilot.com",
-    languages: {
-      "en-US": "https://course-pilot.com",
-      "fr-FR": "https://course-pilot.com/fr",
-      "es-ES": "https://course-pilot.com/es",
-    },
+  openGraph: {
+    title: "CoursePilot – Learn Skills That Matter",
+    description:
+      "A modern learning platform built by Ejidike Simon, designed to help learners gain real-world skills through courses and mentorship.",
+    url: SITE_URL,
+    siteName: "CoursePilot",
+    type: "website",
+    locale: "en_US",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "CoursePilot learning platform preview",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "CoursePilot – Learn Skills That Matter",
+    description:
+      "CoursePilot is a digital learning platform built by Ejidike Simon for skill-driven education.",
+    images: ["/twitter-card.png"],
+    creator: AUTHOR_TWITTER,
+  },
+
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png" }],
+    shortcut: ["/favicon-16x16.png"],
+  },
+
+  manifest: "/site.webmanifest",
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "CoursePilot",
+  },
+
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  // 👤 Person-based structured data (YOU)
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: AUTHOR_NAME,
+    url: AUTHOR_URL,
+    sameAs: [
+      AUTHOR_GITHUB,
+      AUTHOR_LINKEDIN,
+      // AUTHOR_TWITTER ? `https://twitter.com/${AUTHOR_TWITTER.replace("@", "")}` : null,
+    ].filter(Boolean),
+    worksFor: {
+      "@type": "Organization",
+      name: "CoursePilot",
+      url: SITE_URL,
+    },
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "CoursePilot",
+    url: SITE_URL,
+    author: {
+      "@type": "Person",
+      name: AUTHOR_NAME,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${SITE_URL}/courses?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-gray-900`}
+        className={[
+          geistSans.variable,
+          geistMono.variable,
+          "min-h-dvh bg-gray-50 antialiased dark:bg-gray-900",
+        ].join(" ")}
       >
-        <ThemeProvider attribute="class">
+        {/* 🔍 Structured Data */}
+        <Script
+          id="person-jsonld"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
+        <Script
+          id="website-jsonld"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
+
+        <ThemeProvider attribute="class" enableSystem defaultTheme="system">
           <AuthProvider>
             <SidebarProvider>
-              <div className="flex min-h-screen w-full">
-                {/* Left Sidebar */}
-                <aside className="hidden md:block md:fixed md:top-0 md:left-0 md:h-screen md:w-[260px] bg-gray-100 dark:bg-gray-850 md:shadow-lg md:z-30 md:overflow-y-auto">
+              <div className="flex min-h-dvh w-full">
+                <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:block md:w-[260px] md:overflow-y-auto md:border-r md:border-gray-200 md:bg-gray-100 dark:md:border-gray-800 dark:md:bg-gray-850">
                   <AppSidebar />
                 </aside>
 
-                {/* Main Content */}
-                <div className="flex flex-col flex-1 w-full md:ml-[260px] min-w-0">
-                  <div className="bg-gray-50 dark:bg-gray-900 w-full sticky top-0 z-50 shadow px-6 mt-4">
+                <div className="flex min-w-0 flex-1 flex-col md:ml-[260px]">
+                  <div className="sticky top-0 z-50 bg-gray-50/80 px-3 pt-3 backdrop-blur dark:bg-gray-900/70 sm:px-6 sm:pt-4">
                     <Header />
                   </div>
 
-                  <div className="flex flex-col lg:flex-row flex-1 min-w-0">
-                    <main className="flex-1 px-6 py-8 lg:pr-8">{children}</main>
-                    {/* Only render sidebar if user is logged in */}
-                    {/* <RightSidebar /> */}
-                  </div>
+                  <main className="flex-1 px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+                    {children}
+                  </main>
 
-                  <footer className="w-full px-6">
+                  <footer className="px-3 pb-6 sm:px-6 lg:px-8">
                     <Footer />
                   </footer>
                 </div>
               </div>
+
               <Toaster toastOptions={{ duration: 3000 }} />
-              {/* <AppToaster />  */}
               <Analytics />
             </SidebarProvider>
           </AuthProvider>
