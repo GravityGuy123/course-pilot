@@ -2,22 +2,45 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 import { ErrorToast } from "@/lib/toast";
 import { api } from "@/lib/axios.config";
 import { useAuth } from "@/context/auth-context";
-import { ContinueLearning, FeaturedCourse, MyEnrollment } from "@/components/dashboard/student/types/student-dashboard";
+import type {
+  ContinueLearning,
+  FeaturedCourse,
+  MyEnrollment,
+} from "@/components/dashboard/student/types/student-dashboard";
 import { clamp, safeNumber, timeAgo } from "@/lib/format";
 import StudentDashboardShell from "@/components/dashboard/student/StudentDashboardShell";
-import { useTheme } from "next-themes";
 
+type AnyErr = { name?: string; code?: string; message?: string };
+
+function isCanceled(err: unknown): boolean {
+  const e = err as AnyErr;
+  return e?.name === "CanceledError" || e?.name === "AbortError" || e?.code === "ERR_CANCELED";
+}
+
+function getErrMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === "object" && "message" in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === "string" && m.trim()) return m;
+  }
+  return fallback;
+}
 
 function StudentDashboardPage() {
-  const { theme } = useTheme();
-  const isDark = useMemo(() => theme === "dark", [theme]);
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const { theme } = useTheme();
+
+  // ✅ keep theme in a ref so theme changes don't churn callbacks / refetch
+  const isDarkRef = useRef(false);
+  useEffect(() => {
+    isDarkRef.current = theme === "dark";
+  }, [theme]);
 
   const [enrollments, setEnrollments] = useState<MyEnrollment[] | null>(null);
   const [featured, setFeatured] = useState<FeaturedCourse[] | null>(null);
@@ -27,10 +50,20 @@ function StudentDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(false);
+
   const isStudent = Boolean(user?.is_student);
 
-  const enrollmentsSafe = enrollments ?? [];
-  const featuredSafe = featured ?? [];
+  // ✅ FIX: memoize safe arrays so deps are stable
+  const enrollmentsSafe = useMemo<MyEnrollment[]>(
+    () => enrollments ?? [],
+    [enrollments]
+  );
+
+  const featuredSafe = useMemo<FeaturedCourse[]>(
+    () => featured ?? [],
+    [featured]
+  );
 
   const totalCourses = useMemo(() => enrollmentsSafe.length, [enrollmentsSafe]);
 
@@ -72,7 +105,10 @@ function StudentDashboardPage() {
     };
   }, [enrollmentsSafe]);
 
-  const lastActivityLabel = useMemo(() => continueLearning?.lastActivity ?? "—", [continueLearning]);
+  const lastActivityLabel = useMemo(
+    () => continueLearning?.lastActivity ?? "—",
+    [continueLearning]
+  );
 
   const fetchAll = useCallback(
     async (mode: "initial" | "refresh") => {
@@ -89,29 +125,44 @@ function StudentDashboardPage() {
 
       try {
         const [enrollRes, featuredRes] = await Promise.all([
-          api.get<MyEnrollment[]>("/enrollments/me/", { signal: ac.signal }),
-          api.get<FeaturedCourse[]>("/courses/featured/?limit=6", { signal: ac.signal }),
+          api.get<MyEnrollment[]>("/enrollments/me/", {
+            signal: ac.signal,
+            timeout: 15000,
+          }),
+          api.get<FeaturedCourse[]>("/courses/featured/?limit=6", {
+            signal: ac.signal,
+            timeout: 15000,
+          }),
         ]);
+
+        if (!mountedRef.current) return;
 
         setEnrollments(Array.isArray(enrollRes.data) ? enrollRes.data : []);
         setFeatured(Array.isArray(featuredRes.data) ? featuredRes.data : []);
       } catch (err: unknown) {
-        if (err instanceof DOMException && err.name === "AbortError") return;
+        if (isCanceled(err)) return;
+        if (!mountedRef.current) return;
 
-        const message =
-          err && typeof err === "object" && "message" in err
-            ? String((err as { message?: unknown }).message ?? "Failed to load dashboard.")
-            : "Failed to load dashboard.";
-
+        const message = getErrMessage(err, "Failed to load dashboard.");
         setError(message);
-        ErrorToast(message, isDark);
+        ErrorToast(message, isDarkRef.current);
       } finally {
+        if (!mountedRef.current) return;
         setLoading(false);
         setRefreshing(false);
       }
     },
-    [isStudent, isDark]
+    [isStudent]
   );
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+      abortRef.current?.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -123,10 +174,6 @@ function StudentDashboardPage() {
     }
 
     void fetchAll("initial");
-
-    return () => {
-      abortRef.current?.abort();
-    };
   }, [authLoading, user, isStudent, router, fetchAll]);
 
   const onRefresh = useCallback(() => {

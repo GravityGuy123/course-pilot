@@ -206,6 +206,7 @@ export function NotificationsToolbar({ isDark }: { isDark: boolean }) {
   );
 }
 
+
 export function NotificationsPanel({ isDark }: { isDark: boolean }) {
   const [loading, setLoading] = useState(true);
   const [unreadOnly, setUnreadOnly] = useState(false);
@@ -229,11 +230,10 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
     };
 
     try {
-      // Try most likely endpoints (based on your Inbox details: /notifications/<id>/)
       const endpoints = ["/notifications/", "/notifications/me/"];
 
-      let lastErr: unknown = null;
       let data: unknown = null;
+      let lastErr: unknown = null;
 
       for (const url of endpoints) {
         try {
@@ -241,6 +241,8 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
           data = res?.data;
           break;
         } catch (e) {
+          // ✅ IMPORTANT: if this failed because we aborted, stop immediately.
+          if (isCanceled(e)) return;
           lastErr = e;
         }
       }
@@ -248,6 +250,9 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
       if (!mountedRef.current) return;
 
       if (data === null) {
+        // ✅ don’t show "cancelled" as an error
+        if (isCanceled(lastErr)) return;
+
         const msg = getAxiosMessage(lastErr, "Failed to load notifications");
         setError(msg);
         ErrorToast(msg, isDark);
@@ -256,11 +261,8 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
       }
 
       const list = extractList(data);
-      const normalized = list.map((raw, idx) =>
-        normalizeNotification(raw, String(idx))
-      );
+      const normalized = list.map((raw, idx) => normalizeNotification(raw, String(idx)));
 
-      // Newest first (best UX)
       normalized.sort((a, b) => {
         const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
         const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -269,8 +271,9 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
 
       setItems(normalized);
     } catch (err: unknown) {
-      if (!mountedRef.current) return;
+      // ✅ silence all cancel variants
       if (isCanceled(err)) return;
+      if (!mountedRef.current) return;
 
       const msg = getAxiosMessage(err, "Failed to load notifications");
       setError(msg);
@@ -288,11 +291,9 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
     setError(null);
 
     try {
-      // Best case: backend has bulk endpoint
       try {
         await api.post("/notifications/read-all/");
       } catch {
-        // Fallback: patch each unread item (sequential to avoid spamming backend)
         for (const n of items) {
           if (n.read === true) continue;
 
@@ -304,10 +305,11 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
         }
       }
 
-      // Update UI locally
       setItems((prev) => prev.map((n) => ({ ...n, read: true })));
       SuccessToast("All notifications marked as read", isDark);
     } catch (err: unknown) {
+      if (isCanceled(err)) return;
+
       const msg = getAxiosMessage(err, "Could not mark all as read");
       setError(msg);
       ErrorToast(msg, isDark);
@@ -327,7 +329,6 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
 
   const unreadCount = useMemo(() => items.filter((n) => n.read !== true).length, [items]);
 
-  // expose controls for toolbar
   useEffect(() => {
     setControls({
       refresh: fetchNotifications,
@@ -396,7 +397,7 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <Link
                       href={`/dashboard/inbox/${n.id}`}
-                      className="font-semibold text-gray-900 dark:text-gray-100 hover:underline underline-offset-4 break-words"
+                      className="font-semibold text-gray-900 dark:text-gray-100 hover:underline underline-offset-4 wrap-break-word"
                     >
                       {n.title || "Notification"}
                     </Link>
@@ -426,7 +427,7 @@ export function NotificationsPanel({ isDark }: { isDark: boolean }) {
                     </p>
                   ) : null}
 
-                  <p className="mt-3 text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap break-words">
+                  <p className="mt-3 text-sm text-gray-800 dark:text-gray-100 whitespace-pre-wrap wrap-break-word">
                     {n.message || "—"}
                   </p>
                 </div>

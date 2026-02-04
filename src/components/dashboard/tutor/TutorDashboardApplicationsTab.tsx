@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle } from "lucide-react";
 import { DataTable, type Column } from "../shared/DataTable";
-import { Application } from "@/app/dashboard/tutor/mockData";
+import { Application } from "@/components/dashboard/tutor/mockData";
 import { cn } from "@/lib/utils";
 
 const statusAccent = {
@@ -53,12 +53,8 @@ export function TutorDashboardApplicationsTab({
           </Avatar>
 
           <div className="leading-tight">
-            <p className="text-sm font-semibold">
-              {item.name}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {item.email}
-            </p>
+            <p className="text-sm font-semibold">{item.name}</p>
+            <p className="text-xs text-muted-foreground">{item.email}</p>
           </div>
         </div>
       ),
@@ -85,9 +81,7 @@ export function TutorDashboardApplicationsTab({
       render: (item) => (
         <div className="text-sm font-medium whitespace-nowrap">
           {item.experience}
-          <span className="ml-1 text-xs text-muted-foreground">
-            experience
-          </span>
+          <span className="ml-1 text-xs text-muted-foreground">experience</span>
         </div>
       ),
     },
