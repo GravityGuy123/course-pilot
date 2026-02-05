@@ -104,7 +104,7 @@ function ModeratorCoursesPage() {
               setPage(1);
             }}
             placeholder="Search title/description…"
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           />
 
           <select
@@ -114,7 +114,7 @@ function ModeratorCoursesPage() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           >
             <option value="">All</option>
             <option value="published">Published</option>

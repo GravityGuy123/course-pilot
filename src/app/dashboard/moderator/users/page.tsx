@@ -112,7 +112,7 @@ function ModeratorUsersPage() {
               setPage(1);
             }}
             placeholder="Search name/email/username…"
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           />
 
           <select
@@ -122,7 +122,7 @@ function ModeratorUsersPage() {
               setRole(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           >
             <option value="">All Roles</option>
             <option value="student">Student</option>
@@ -138,7 +138,7 @@ function ModeratorUsersPage() {
               setIsActive(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           >
             <option value="">All Status</option>
             <option value="true">Active</option>

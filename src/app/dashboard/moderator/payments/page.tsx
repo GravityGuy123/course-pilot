@@ -97,7 +97,7 @@ function ModeratorPaymentsPage() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           >
             <option value="">All Status</option>
             <option value="pending">pending</option>
@@ -113,7 +113,7 @@ function ModeratorPaymentsPage() {
               setPage(1);
             }}
             placeholder="Provider (e.g. paystack)…"
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           />
 
           <input
@@ -123,7 +123,7 @@ function ModeratorPaymentsPage() {
               setPage(1);
             }}
             placeholder="Search txn id or email…"
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           />
 
           <button

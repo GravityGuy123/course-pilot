@@ -161,7 +161,7 @@ function ModeratorApplicationsPage() {
               setStatus(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           >
             <option value="">All Status</option>
             <option value="pending">Pending</option>
@@ -176,7 +176,7 @@ function ModeratorApplicationsPage() {
               setRole(e.target.value);
               setPage(1);
             }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           >
             <option value="">All Roles</option>
             <option value="tutor">Tutor</option>
@@ -190,7 +190,7 @@ function ModeratorApplicationsPage() {
               setPage(1);
             }}
             placeholder="Search applicant email/name…"
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-background"
+            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           />
 
           <button

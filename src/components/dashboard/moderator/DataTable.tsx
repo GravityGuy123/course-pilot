@@ -20,7 +20,7 @@ export default function DataTable<T>({
     <div className="rounded-xl border overflow-hidden">
       <div className="w-full overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-muted/40">
+          <thead className="bg-white dark:bg-gray-800">
             <tr>
               {columns.map((c) => (
                 <th key={c.key} className={`text-left font-medium px-4 py-3 ${c.className ?? ""}`}>
