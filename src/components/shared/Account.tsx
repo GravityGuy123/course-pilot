@@ -83,8 +83,16 @@ export default function Account() {
         <SidebarMenu>
           {userItems.map((item) => {
             const isLogout = item.title === "Logout";
+
+            /**
+             * Active state rules:
+             * - Profile → EXACT match only
+             * - Other routes → exact OR sub-routes
+             */
             const isActive = item.url
-              ? pathname === item.url || pathname.startsWith(item.url + "/")
+              ? item.url === "/dashboard/profile"
+                ? pathname === item.url
+                : pathname === item.url || pathname.startsWith(item.url + "/")
               : false;
 
             return (
