@@ -1,9 +1,11 @@
+// src/app/dashboard/moderator/applications/page.tsx
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toApiError } from "@/lib/axios.config";
-import { fetchApplications, reviewApplication } from "@/lib/moderator/api";
-import type { AdminApplicationRow, ReviewAction } from "@/lib/moderator/types";
+import { fetchPendingApplications, reviewApplication } from "@/lib/moderator/api";
+import type { ModerationApplicationRow, ModerationReviewAction } from "@/lib/moderator/types";
+
 import PageHeader from "@/components/dashboard/moderator/PageHeader";
 import DataTable, { Column } from "@/components/dashboard/moderator/DataTable";
 import Pagination from "@/components/dashboard/moderator/Pagination";
@@ -12,21 +14,22 @@ import ErrorState from "@/components/dashboard/moderator/ErrorState";
 import SkeletonBlock from "@/components/dashboard/moderator/SkeletonBlock";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-
 function formatDate(value: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleString();
 }
 
+// ✅ Typed role filter (no `any`)
+type ApplicationRoleFilter = "" | "tutor" | "moderator";
+
 function ModeratorApplicationsPage() {
-  const [status, setStatus] = useState("");
-  const [role, setRole] = useState("");
+  const [role, setRole] = useState<ApplicationRoleFilter>("");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize] = useState(25);
 
-  const [rows, setRows] = useState<AdminApplicationRow[]>([]);
+  const [rows, setRows] = useState<ModerationApplicationRow[]>([]);
   const [total, setTotal] = useState(0);
 
   const [loading, setLoading] = useState(true);
@@ -36,16 +39,29 @@ function ModeratorApplicationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setErrMsg(null);
+
     try {
-      const data = await fetchApplications({
-        status: status || undefined,
-        role: role || undefined,
-        search: search || undefined,
+      const data = await fetchPendingApplications({
+        // ✅ no `as any`
+        role: role === "" ? undefined : role,
         page,
         page_size: pageSize,
       });
-      setRows(data.results);
-      setTotal(data.count);
+
+      // Backend doesn't support search on pending list yet.
+      // We'll do client-side filtering (safe + simple).
+      const filtered = !search
+        ? data.results
+        : data.results.filter((a) => {
+            const n = a.applicant?.full_name || "";
+            const e = a.applicant?.email || "";
+            const u = a.applicant?.username || "";
+            const q = search.toLowerCase();
+            return n.toLowerCase().includes(q) || e.toLowerCase().includes(q) || u.toLowerCase().includes(q);
+          });
+
+      setRows(filtered);
+      setTotal(search ? filtered.length : data.count);
     } catch (e) {
       setErrMsg(toApiError(e).message);
       setRows([]);
@@ -53,18 +69,23 @@ function ModeratorApplicationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, pageSize, role, search, status]);
+  }, [page, pageSize, role, search]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   const act = useCallback(
-    async (id: string, action: ReviewAction) => {
+    async (id: string, action: ModerationReviewAction) => {
+      const reason = window
+        .prompt(action === "approve" ? "Reason for approving? (optional)" : "Reason for rejecting? (optional)")
+        ?.trim();
+
       setActingId(id);
       setErrMsg(null);
+
       try {
-        await reviewApplication(id, action);
+        await reviewApplication(id, action, { reason: reason || undefined });
         await load();
       } catch (e) {
         setErrMsg(toApiError(e).message);
@@ -75,28 +96,19 @@ function ModeratorApplicationsPage() {
     [load]
   );
 
-  const cols: Array<Column<AdminApplicationRow>> = useMemo(
+  const cols: Array<Column<ModerationApplicationRow>> = useMemo(
     () => [
       {
         key: "applicant",
         header: "Applicant",
         cell: (a) => (
           <div className="flex flex-col">
-            <span className="font-medium">{a.applicant_name}</span>
-            <span className="text-xs opacity-70">{a.applicant_email}</span>
+            <span className="font-medium">{a.applicant?.full_name || a.applicant?.username || "—"}</span>
+            <span className="text-xs opacity-70">{a.applicant?.email || "—"}</span>
           </div>
         ),
       },
       { key: "role", header: "Role", cell: (a) => <span className="opacity-80 capitalize">{a.role}</span> },
-      {
-        key: "status",
-        header: "Status",
-        cell: (a) => (
-          <span className="inline-flex rounded-full px-2 py-0.5 text-xs border capitalize">
-            {a.status}
-          </span>
-        ),
-      },
       {
         key: "submitted",
         header: "Submitted",
@@ -106,7 +118,7 @@ function ModeratorApplicationsPage() {
         key: "actions",
         header: "Actions",
         cell: (a) => {
-          const disabled = actingId === a.id || a.status !== "pending";
+          const disabled = actingId === a.id;
           return (
             <div className="flex flex-wrap gap-2">
               <button
@@ -136,7 +148,7 @@ function ModeratorApplicationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Applications"
+        title="Applications (Pending)"
         subtitle="Review Tutor/Moderator applications."
         right={
           <button
@@ -153,27 +165,12 @@ function ModeratorApplicationsPage() {
       />
 
       <div className="rounded-xl border p-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <select
-            aria-label="Application Status"
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-            className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <select
             aria-label="Application Roles"
             value={role}
             onChange={(e) => {
-              setRole(e.target.value);
+              setRole(e.target.value as ApplicationRoleFilter);
               setPage(1);
             }}
             className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
@@ -189,14 +186,13 @@ function ModeratorApplicationsPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            placeholder="Search applicant email/name…"
+            placeholder="Search applicant name/email/username…"
             className="w-full rounded-lg border px-3 py-2 text-sm bg-white dark:bg-gray-800"
           />
 
           <button
             type="button"
             onClick={() => {
-              setStatus("");
               setRole("");
               setSearch("");
               setPage(1);
@@ -209,11 +205,9 @@ function ModeratorApplicationsPage() {
       </div>
 
       {loading ? <SkeletonBlock rows={8} /> : null}
-
       {!loading && errMsg ? <ErrorState title="Failed to load applications" message={errMsg} onRetry={load} /> : null}
-
       {!loading && !errMsg && rows.length === 0 ? (
-        <EmptyState title="No applications found" message="Try adjusting your filters." />
+        <EmptyState title="No pending applications" message="Try changing the role filter or search term." />
       ) : null}
 
       {!loading && !errMsg && rows.length > 0 ? (
@@ -225,7 +219,6 @@ function ModeratorApplicationsPage() {
     </div>
   );
 }
-
 
 export default function ModeratorApplicationsPageContent() {
   return (

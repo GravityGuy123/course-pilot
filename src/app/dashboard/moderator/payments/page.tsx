@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toApiError } from "@/lib/axios.config";
 import { fetchPayments } from "@/lib/moderator/api";
-import type { AdminPaymentRow } from "@/lib/moderator/types";
+import type { ModerationPaymentRow } from "@/lib/moderator/types";
 import PageHeader from "@/components/dashboard/moderator/PageHeader";
 import DataTable, { Column } from "@/components/dashboard/moderator/DataTable";
 import Pagination from "@/components/dashboard/moderator/Pagination";
@@ -12,11 +12,24 @@ import ErrorState from "@/components/dashboard/moderator/ErrorState";
 import SkeletonBlock from "@/components/dashboard/moderator/SkeletonBlock";
 import { ProtectedRoute } from "@/components/routing/RouteGuard";
 
-
 function formatDate(value: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleString();
+}
+
+function formatMoney(amount: number, currency: string): string {
+  const cur = (currency || "").toUpperCase();
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: cur || "USD",
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch {
+    // Fallback for unknown/invalid currency codes
+    return `${amount} ${cur}`.trim();
+  }
 }
 
 function ModeratorPaymentsPage() {
@@ -26,26 +39,49 @@ function ModeratorPaymentsPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(30);
 
-  const [rows, setRows] = useState<AdminPaymentRow[]>([]);
+  const [rows, setRows] = useState<ModerationPaymentRow[]>([]);
   const [total, setTotal] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
 
-  const cols: Array<Column<AdminPaymentRow>> = useMemo(
+  // Prevent stale responses from overwriting newer state
+  const requestSeq = useRef(0);
+
+  const cols: Array<Column<ModerationPaymentRow>> = useMemo(
     () => [
       { key: "email", header: "User Email", cell: (p) => <span className="opacity-80">{p.user_email}</span> },
-      { key: "amount", header: "Amount", cell: (p) => <span className="font-medium">{p.amount} {p.currency}</span> },
-      { key: "status", header: "Status", cell: (p) => <span className="inline-flex rounded-full px-2 py-0.5 text-xs border">{p.status}</span> },
-      { key: "provider", header: "Provider", cell: (p) => <span className="opacity-80">{p.provider}</span> },
+      {
+        key: "amount",
+        header: "Amount",
+        cell: (p) => <span className="font-medium">{formatMoney(p.amount, p.currency)}</span>,
+      },
+      {
+        key: "status",
+        header: "Status",
+        cell: (p) => (
+          <span className="inline-flex rounded-full px-2 py-0.5 text-xs border capitalize">
+            {p.status || "—"}
+          </span>
+        ),
+      },
+      { key: "provider", header: "Provider", cell: (p) => <span className="opacity-80">{p.provider || "—"}</span> },
+      {
+        key: "txn",
+        header: "Txn ID",
+        cell: (p) => <span className="opacity-70">{p.provider_txn_id || "—"}</span>,
+      },
       { key: "created", header: "Created", cell: (p) => <span className="opacity-80">{formatDate(p.created_at)}</span> },
     ],
     []
   );
 
   const load = useCallback(async () => {
+    const seq = ++requestSeq.current;
+
     setLoading(true);
     setErrMsg(null);
+
     try {
       const data = await fetchPayments({
         status: status || undefined,
@@ -54,13 +90,18 @@ function ModeratorPaymentsPage() {
         page,
         page_size: pageSize,
       });
+
+      if (seq !== requestSeq.current) return; // stale response guard
+
       setRows(data.results);
       setTotal(data.count);
     } catch (e) {
+      if (seq !== requestSeq.current) return;
       setErrMsg(toApiError(e).message);
       setRows([]);
       setTotal(0);
     } finally {
+      if (seq !== requestSeq.current) return;
       setLoading(false);
     }
   }, [page, pageSize, provider, search, status]);
@@ -77,11 +118,12 @@ function ModeratorPaymentsPage() {
         right={
           <button
             type="button"
+            disabled={loading}
             onClick={() => {
               setPage(1);
               load();
             }}
-            className="rounded-lg border px-3 py-2 text-sm hover:bg-muted transition"
+            className="rounded-lg border px-3 py-2 text-sm hover:bg-muted transition disabled:opacity-50"
           >
             Refresh
           </button>
@@ -156,7 +198,6 @@ function ModeratorPaymentsPage() {
     </div>
   );
 }
-
 
 export default function ModeratorPaymentsPageContent() {
   return (
