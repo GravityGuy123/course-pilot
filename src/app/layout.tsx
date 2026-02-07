@@ -12,6 +12,7 @@ import Footer from "@/components/shared/Footer";
 import { AuthProvider } from "@/context/auth-context";
 import { Analytics } from "@vercel/analytics/react";
 import { Toaster } from "@/components/ui/sonner";
+import { MobileSidebarProvider } from "@/context/mobile-sidebar-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,8 +27,7 @@ const geistMono = Geist_Mono({
 });
 
 // 🌍 Site URL (env-safe)
-const SITE_URL =
-  (process.env.NEXT_PUBLIC_SITE_URL || "https://course-pilot.com").trim();
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://course-pilot.com").trim();
 
 // 👤 AUTHOR IDENTITY (single source of truth)
 const AUTHOR_NAME = "Ejidike Simon";
@@ -137,8 +137,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CoursePilot – Learn Skills That Matter",
-    description:
-      "CoursePilot is a digital learning platform built by Ejidike Simon for skill-driven education.",
+    description: "CoursePilot is a digital learning platform built by Ejidike Simon for skill-driven education.",
     images: ["/twitter-card.png"],
     creator: AUTHOR_TWITTER,
   },
@@ -167,17 +166,12 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
-  // 👤 Person-based structured data (YOU)
   const personJsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
     name: AUTHOR_NAME,
     url: AUTHOR_URL,
-    sameAs: [
-      AUTHOR_GITHUB,
-      AUTHOR_LINKEDIN,
-      // AUTHOR_TWITTER ? `https://twitter.com/${AUTHOR_TWITTER.replace("@", "")}` : null,
-    ].filter(Boolean),
+    sameAs: [AUTHOR_GITHUB, AUTHOR_LINKEDIN].filter(Boolean),
     worksFor: {
       "@type": "Organization",
       name: "CoursePilot",
@@ -210,7 +204,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           "min-h-dvh bg-gray-50 antialiased dark:bg-gray-900",
         ].join(" ")}
       >
-        {/* 🔍 Structured Data */}
         <Script
           id="person-jsonld"
           type="application/ld+json"
@@ -227,28 +220,30 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeProvider attribute="class" enableSystem defaultTheme="system">
           <AuthProvider>
             <SidebarProvider>
-              <div className="flex min-h-dvh w-full">
-                <aside className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:block md:w-[260px] md:overflow-y-auto md:border-r md:border-gray-200 md:bg-gray-100 dark:md:border-gray-800 dark:md:bg-gray-850">
+              <MobileSidebarProvider>
+                <div className="flex min-h-dvh w-full">
+                  {/* ✅ MUST be mounted always (mobile + desktop) */}
                   <AppSidebar />
-                </aside>
 
-                <div className="flex min-w-0 flex-1 flex-col md:ml-[260px]">
-                  <div className="sticky top-0 z-50 bg-gray-50/80 px-3 pt-3 backdrop-blur dark:bg-gray-900/70 sm:px-6 sm:pt-4">
-                    <Header />
+                  {/* Main content */}
+                  <div className="flex min-w-0 flex-1 flex-col md:ml-[260px]">
+                    <div className="sticky top-0 z-50 bg-gray-50/80 px-3 pt-3 backdrop-blur dark:bg-gray-900/70 sm:px-6 sm:pt-4">
+                      <Header />
+                    </div>
+
+                    <main className="flex-1 px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
+                      {children}
+                    </main>
+
+                    <footer className="px-3 pb-6 sm:px-6 lg:px-8">
+                      <Footer />
+                    </footer>
                   </div>
-
-                  <main className="flex-1 px-3 py-6 sm:px-6 sm:py-8 lg:px-8">
-                    {children}
-                  </main>
-
-                  <footer className="px-3 pb-6 sm:px-6 lg:px-8">
-                    <Footer />
-                  </footer>
                 </div>
-              </div>
 
-              <Toaster toastOptions={{ duration: 3000 }} />
-              <Analytics />
+                <Toaster toastOptions={{ duration: 3000 }} />
+                <Analytics />
+              </MobileSidebarProvider>
             </SidebarProvider>
           </AuthProvider>
         </ThemeProvider>

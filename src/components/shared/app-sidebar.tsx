@@ -1,25 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Account from "./Account";
 import LogoContent from "./LogoContent";
 import Pages from "./Pages";
 import DashboardPages from "./DashboardPages";
 import ConditionalFriendsCard from "./ConditionalFriendsCard";
 import { Sidebar, SidebarContent } from "@/components/ui/sidebar";
+import { useMobileSidebar } from "@/context/mobile-sidebar-context";
 
 export function AppSidebar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isOpen, close } = useMobileSidebar();
 
-  // Keep focus + body scroll sane when drawer is open (mobile UX best-practice)
-  const openButtonRef = useRef<HTMLButtonElement | null>(null);
+  // Focus management for accessibility
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const closeMenu = useCallback(() => setIsMobileMenuOpen(false), []);
-  const openMenu = useCallback(() => setIsMobileMenuOpen(true), []);
+  const closeMenu = useCallback(() => close(), [close]);
 
   useEffect(() => {
-    if (!isMobileMenuOpen) return;
+    if (!isOpen) return;
 
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -35,43 +34,15 @@ export function AppSidebar() {
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = prevOverflow;
-      openButtonRef.current?.focus();
     };
-  }, [isMobileMenuOpen, closeMenu]);
+  }, [isOpen, closeMenu]);
 
   return (
     <>
-      {/* 🌐 Mobile hamburger */}
-      <div className="md:hidden px-3 pt-3 sm:px-4 sm:pt-4 relative z-50">
-        <button
-          ref={openButtonRef}
-          type="button"
-          onClick={openMenu}
-          className="inline-flex items-center justify-center rounded-lg p-2 text-violet-500 transition hover:bg-violet-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:text-indigo-300 dark:hover:bg-violet-700/30 dark:focus-visible:ring-indigo-400 dark:focus-visible:ring-offset-gray-900"
-          aria-label="Open menu"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 sm:h-7 sm:w-7"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* 🖥 Desktop sidebar */}
-      <div className="hidden md:block">
-        <Sidebar className="bg-gray-50 dark:bg-gray-800">
-          <SidebarContent className="overflow-y-auto dark:bg-gray-800">
+      {/* 🖥 Desktop sidebar (md+) */}
+      <div className="hidden md:fixed md:inset-y-0 md:left-0 md:z-30 md:block md:w-[260px] md:overflow-y-auto md:border-r md:border-gray-200 md:bg-gray-50 dark:md:border-gray-800 dark:md:bg-gray-900">
+        <Sidebar className="bg-transparent">
+          <SidebarContent className="overflow-y-auto bg-gray-50 dark:bg-gray-900">
             <LogoContent />
             <Pages />
             <DashboardPages />
@@ -81,7 +52,7 @@ export function AppSidebar() {
         </Sidebar>
       </div>
 
-      {/* 📱 Mobile drawer */}
+      {/* 📱 Mobile drawer (<md) */}
       <div
         id="mobile-sidebar"
         role="dialog"
@@ -89,13 +60,12 @@ export function AppSidebar() {
         aria-label="Sidebar navigation"
         className={[
           "fixed inset-y-0 left-0 md:hidden",
+          "flex flex-col h-dvh", // ✅ CRITICAL FIX
           "z-70",
-          // better width scaling on tiny → big phones/tablets
           "w-[88vw] max-w-[22rem] sm:w-[70vw] sm:max-w-[26rem]",
           "bg-gray-50 dark:bg-gray-800 shadow-xl",
           "transform transition-transform duration-300 ease-in-out will-change-transform",
-          // prevent hidden drawer from blocking clicks
-          isMobileMenuOpen
+          isOpen
             ? "translate-x-0 pointer-events-auto"
             : "-translate-x-full pointer-events-none",
         ].join(" ")}
@@ -117,19 +87,14 @@ export function AppSidebar() {
             strokeWidth={2.5}
             aria-hidden="true"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        {/* Content */}
+        {/* Drawer content */}
         <div
           className={[
             "flex min-h-full flex-col overflow-y-auto overscroll-contain",
-            // safe-area friendly padding (notches / gesture bars)
             "px-4 sm:px-6",
             "pt-[max(4rem,env(safe-area-inset-top))]",
             "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
@@ -138,10 +103,10 @@ export function AppSidebar() {
           <div className="space-y-6">
             <LogoContent />
             <Pages onLinkClick={closeMenu} />
-            <DashboardPages />
+            <DashboardPages onLinkClick={closeMenu} />
             <div className="space-y-4">
               <ConditionalFriendsCard />
-              <Account />
+              <Account onLinkClick={closeMenu} />
             </div>
           </div>
         </div>
@@ -152,9 +117,7 @@ export function AppSidebar() {
         className={[
           "fixed inset-0 md:hidden bg-black/40 transition-opacity duration-300",
           "z-60",
-          isMobileMenuOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none",
+          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
         ].join(" ")}
         onClick={closeMenu}
         aria-hidden="true"
